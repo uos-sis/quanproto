@@ -1,0 +1,253 @@
+import os
+
+import albumentations as A
+import numpy as np
+import skimage as ski
+import torch
+from albumentations.pytorch import ToTensorV2
+from torch.utils.data import DataLoader, Dataset
+
+import quanproto.dataloader.params as quan_params
+import quanproto.datasets.config_parser as quan_dataset
+from quanproto.augmentation import enums
+
+# we will use the SingleAugmentationDataset for validation and push and test dataloader
+from quanproto.dataloader.single_augmentation import SingleAugmentationDataset
+from quanproto.datasets import functional as F
+from quanproto.features.config_parser import feature_dict
+
+
+class DoubleAugmentationDataset(Dataset):
+    def __init__(
+        self, root: str, geometric_transform, transform: A.Compose, info, crop: bool
+    ) -> None:
+        self.root = root
+        self.img_ids = info["ids"]  # important for the push
+        self.paths = info["paths"]
+        self.labels = info["labels"]
+        self.multi_label = len(self.labels[0]) > 1
+        self.transform = A.Compose(transform)
+
+        if crop and "bboxes" in info:
+            self.bboxes = info["bboxes"]
+            self.geotransform = A.Compose(
+                enums.get_augmentation_pipeline("crop") + geometric_transform
+            )
+        else:
+            self.geotransform = A.Compose(geometric_transform)
+
+    def __len__(self):
+        return len(self.paths)
+
+    def __getitem__(self, idx: int):
+        img = ski.io.imread(os.path.join(self.root, self.paths[idx]))
+        if len(img.shape) == 2:
+            # convert to 3 channels
+            img = ski.color.gray2rgb(img)
+        if img.shape[2] == 4:
+            img = (ski.color.rgba2rgb(img) * 255).astype(np.uint8)
+        if img.shape[2] == 2:
+            raise ValueError("Image has 2 channels")
+
+        if hasattr(self, "bboxes"):
+            largest_bbox = F.combine_bounding_boxes(self.bboxes[idx])
+            geo_img = self.geotransform(image=img, cropping_bbox=largest_bbox)["image"]
+
+            img_t1 = self.transform(image=geo_img)["image"]
+            img_t2 = self.transform(image=geo_img)["image"]
+        else:
+            geo_img = self.geotransform(image=img)["image"]
+
+            img_t1 = self.transform(image=geo_img)["image"]
+            img_t2 = self.transform(image=geo_img)["image"]
+
+        # check what dtype is returned
+        if isinstance(img_t1, torch.Tensor) and isinstance(img_t2, torch.Tensor):
+            img_t1 = img_t1.float()
+            img_t2 = img_t2.float()
+        else:
+            img_t1 = torch.tensor(img_t1).float()
+            img_t2 = torch.tensor(img_t2).float()
+
+        # make a tensor of labels
+        if self.multi_label:
+            labels = torch.tensor(self.labels[idx]).float()
+        else:
+            labels = int(self.labels[idx][0])
+
+        return img_t1, img_t2, labels
+
+
+def test_dataloader(
+    config,
+    batch_size=quan_params.BATCH_SIZE,
+    num_workers=quan_params.NUM_DATALOADER_WORKERS,
+    pin_memory=quan_params.PIN_MEMORY,
+    crop: bool = False,
+):
+
+    dataset = quan_dataset.get_dataset(config["dataset_dir"], config["dataset"])
+
+    mean = feature_dict[config["features"]]["mean"]
+    std = feature_dict[config["features"]]["std"]
+    size = feature_dict[config["features"]]["input_size"][1:]
+
+    test_dataset = DoubleAugmentationDataset(
+        dataset.test_dirs()["test"],
+        [
+            A.Resize(size[0], size[1]),
+            A.Normalize(mean=mean, std=std),
+            ToTensorV2(),
+        ],
+        dataset.test_info(),
+        crop,
+    )
+    test_loader = DataLoader(
+        test_dataset,
+        batch_size=batch_size,
+        shuffle=False,
+        num_workers=num_workers,
+        pin_memory=pin_memory,
+    )
+
+    return test_loader
+
+
+def validation_dataloader(
+    config,
+    batch_size=quan_params.BATCH_SIZE,
+    num_workers=quan_params.NUM_DATALOADER_WORKERS,
+    pin_memory=quan_params.PIN_MEMORY,
+    crop: bool = False,
+):
+
+    dataset = quan_dataset.get_dataset(config["dataset_dir"], config["dataset"])
+
+    mean = feature_dict[config["features"]]["mean"]
+    std = feature_dict[config["features"]]["std"]
+    size = feature_dict[config["features"]]["input_size"][1:]
+
+    fold_idx = config["fold_idx"]
+
+    validation_dataset = DoubleAugmentationDataset(
+        dataset.fold_dirs(fold_idx)["validation"],
+        [
+            A.Resize(size[0], size[1]),
+            A.Normalize(mean=mean, std=std),
+            ToTensorV2(),
+        ],
+        dataset.fold_info(fold_idx, "validation"),
+        crop,
+    )
+    validation_loader = DataLoader(
+        validation_dataset,
+        batch_size=batch_size,
+        shuffle=False,
+        num_workers=num_workers,
+        pin_memory=pin_memory,
+    )
+
+    return validation_loader
+
+
+def make_dataloader_trainingset(
+    config,
+    num_workers=quan_params.NUM_DATALOADER_WORKERS,
+    pin_memory=quan_params.PIN_MEMORY,
+    crop: bool = False,
+):
+    dataset = quan_dataset.get_dataset(config["dataset_dir"], config["dataset"])
+
+    mean = feature_dict[config["features"]]["mean"]
+    std = feature_dict[config["features"]]["std"]
+    size = feature_dict[config["features"]]["input_size"][1:]
+
+    aug_pipeline = config["augmentation_pipeline"]
+
+    geometric_pipeline = [A.Resize(size[0], size[1])]
+    geometric_pipeline += enums.get_augmentation_pipeline(
+        aug_pipeline[0][0], aug_pipeline[0][1]
+    )
+    del aug_pipeline[0]
+
+    pipline = []
+    for key, range_id in aug_pipeline:
+        pipline += enums.get_augmentation_pipeline(key, range_id)
+
+    train_dataset = DoubleAugmentationDataset(
+        dataset.fold_dirs(config["fold_idx"])["train"],
+        geometric_pipeline,
+        pipline
+        + [
+            A.Normalize(mean=mean, std=std),
+            ToTensorV2(),
+        ],
+        dataset.fold_info(config["fold_idx"], "train"),
+        crop,
+    )
+    train_loader = DataLoader(
+        train_dataset,
+        batch_size=config["batch_size"],
+        shuffle=True,
+        num_workers=num_workers,
+        pin_memory=pin_memory,
+    )
+
+    if "validation" in dataset.fold_dirs(config["fold_idx"]):
+        validation_dataset = SingleAugmentationDataset(
+            dataset.fold_dirs(config["fold_idx"])["validation"],
+            [
+                A.Resize(size[0], size[1]),
+                A.Normalize(mean=mean, std=std),
+                ToTensorV2(),
+            ],
+            dataset.fold_info(config["fold_idx"], "validation"),
+            crop,
+        )
+        validation_loader = DataLoader(
+            validation_dataset,
+            batch_size=config["batch_size"],
+            shuffle=False,
+            num_workers=num_workers,
+            pin_memory=pin_memory,
+        )
+    else:
+        # use the test folder as validation
+        validation_dataset = SingleAugmentationDataset(
+            dataset.test_dirs()["test"],
+            [
+                A.Resize(size[0], size[1]),
+                A.Normalize(mean=mean, std=std),
+                ToTensorV2(),
+            ],
+            dataset.test_info(),
+            crop,
+        )
+        validation_loader = DataLoader(
+            validation_dataset,
+            batch_size=config["batch_size"],
+            shuffle=False,
+            num_workers=num_workers,
+            pin_memory=pin_memory,
+        )
+
+    push_dataset = SingleAugmentationDataset(
+        dataset.fold_dirs(config["fold_idx"])["train"],
+        [
+            A.Resize(size[0], size[1]),
+            A.Normalize(mean=mean, std=std),
+            ToTensorV2(),
+        ],
+        dataset.fold_info(config["fold_idx"], "train"),
+        crop,
+    )
+    push_loader = DataLoader(
+        push_dataset,
+        batch_size=config["batch_size"],
+        shuffle=False,
+        num_workers=num_workers,
+        pin_memory=pin_memory,
+    )
+    class_weights = dataset.class_weights(config["fold_idx"])
+
+    return train_loader, validation_loader, push_loader, class_weights
