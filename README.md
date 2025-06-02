@@ -69,4 +69,4 @@ The evaluation scripts are located in the `evaluation/model` directory. Check ou
 script for some examples on how to run the evaluation scripts.
 
 You can also genrate latex tables for the results by running the `results2table.py` and the
-``paper_table.py` scripts.
+`paper_table.py` scripts.
