@@ -24,9 +24,7 @@ class SingleAugmentationDataset(Dataset):
 
         if crop and "bboxes" in info:
             self.bboxes = info["bboxes"]
-            self.transform = A.Compose(
-                enums.get_augmentation_pipeline("crop") + transform
-            )
+            self.transform = A.Compose(enums.get_augmentation_pipeline("crop") + transform)
         else:
             self.transform = A.Compose(transform)
 
@@ -44,8 +42,8 @@ class SingleAugmentationDataset(Dataset):
             raise ValueError("Image has 2 channels")
 
         if hasattr(self, "bboxes"):
-            largest_bbox = F.combine_bounding_boxes(self.bboxes[idx])
-            img = self.transform(image=img, cropping_bbox=largest_bbox)["image"]
+            bbox = F.get_random_bounding_box(self.bboxes[idx])
+            img = self.transform(image=img, cropping_bbox=bbox)["image"]
         else:
             img = self.transform(image=img)["image"]
 
@@ -61,6 +59,16 @@ class SingleAugmentationDataset(Dataset):
         else:
             labels = int(self.labels[idx][0])
         return img, labels
+
+    def getitem_by_id(self, img_id):
+        """
+        Get the item by id
+        """
+        # idx = self.img_ids.index(img_id)
+        idx = img_id
+        if idx is None:
+            raise ValueError(f"Image id {img_id} not found in dataset")
+        return self.__getitem__(idx)
 
 
 def test_dataloader(
