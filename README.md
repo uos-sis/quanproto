@@ -1,4 +1,13 @@
 # Quanproto Python Library
+
+## Paper Contributions
+The repository contains the code for the following paper:
+- **Schlinge et al. - 2025 - Comprehensive Evaluation of Prototype Neural Networks** 
+  - [arXiv](https://arxiv.org/abs/2507.06819)
+- **Meinert et al. - 2025 - ProtoMask: Segmentation-Guided Prototype Learning**
+
+
+
 ## Overview
 
 Quanproto is a Python library designed to train and evaluate prototype networks,
