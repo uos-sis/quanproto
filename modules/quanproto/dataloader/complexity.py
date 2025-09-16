@@ -56,9 +56,7 @@ class ComplexityDataset(Dataset):
         return len(self.image_paths)
 
     def __getitem__(self, idx: int):
-        seg_mask = ski.io.imread(
-            os.path.join(self.seg_mask_root, self.seg_mask_paths[idx][0])
-        )
+        seg_mask = ski.io.imread(os.path.join(self.seg_mask_root, self.seg_mask_paths[idx][0]))
         if len(seg_mask.shape) == 2:
             # convert to 3 channels
             seg_mask = ski.color.gray2rgb(seg_mask)
@@ -141,7 +139,7 @@ class ComplexityDataset(Dataset):
             # overwrite the -1 entries with the actual partlocs
             for i, point in enumerate(tf_partlocs):
                 # switch the value from x,y to y,x
-                t_partlocs[i] = torch.tensor([point[1], point[0]], dtype=torch.float32)
+                t_partlocs[i] = torch.tensor([point[0], point[1]], dtype=torch.float32)
                 t_partlocs_ids[i] = torch.tensor(partlocs_ids[i], dtype=torch.int32)
 
         return tf_img, tf_seg_mask, t_partlocs, t_partlocs_ids, labels

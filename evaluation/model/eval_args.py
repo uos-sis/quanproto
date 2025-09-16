@@ -46,7 +46,7 @@ parser.add_argument(
 parser.add_argument(
     "--explanation_type",
     type=str,
-    default="upscale",
+    default=None,
 )
 
 parser.add_argument(

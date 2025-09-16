@@ -3,7 +3,7 @@ from quanproto.utils.workspace import DATASET_DIR
 
 config = {
     "dataset_dir": DATASET_DIR,
-    "num_classes": 10,
+    "num_classes": 2,
     "dataset": "cub200",
     # "dataset": "dogs",
     # "dataset": "cars196",

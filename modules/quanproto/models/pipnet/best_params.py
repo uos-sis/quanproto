@@ -1,4 +1,3 @@
-# With input bb cropping + resnet50
 pipnet_cub200_params = {
     "model": "pipnet",
     "batch_size": 64,
@@ -17,8 +16,79 @@ pipnet_cub200_params = {
     "joint_epochs": 100,
     "warmup_epochs": 5,
     "fine_tune_epochs": 0,
+    "features": "resnet50",
     "augmentation_pipeline": [["geometric", "medium"], ["pipnet", "large"]],
 }
+
+# NoCrop
+# pipnet_cub200_params = {
+#     "model": "pipnet",
+#     "batch_size": 64,
+#     "init_feature_weights": True,
+#     "warm_optimizer_lr": 1.2e-05,
+#     "joint_optimizer_lr.backbone": 5.6e-05,
+#     "joint_optimizer_lr.prototype_layers": 0.00084,
+#     "joint_optimizer_lr.last_layer": 0.023,
+#     "fine_tune_optimizer_lr": 0.01,
+#     "joint_scheduler.gamma": 0.5,
+#     "joint_scheduler.step_size": 35,
+#     "coefs.align": 5.0,
+#     "coefs.tanh": 2.0,
+#     "coefs.uniform": 0.0,
+#     "coefs.classification": 2.0,
+#     "joint_epochs": 100,
+#     "warmup_epochs": 5,
+#     "fine_tune_epochs": 0,
+#     "features": "resnet50",
+#     "augmentation_pipeline": [["geometric", "medium"], ["pipnet", "large"]],
+# }
+
+
+pipnet_dogs_params = {
+    "model": "pipnet",
+    "batch_size": 64,
+    "init_feature_weights": True,
+    "warm_optimizer_lr": 1e-05,
+    "joint_optimizer_lr.backbone": 5e-05,
+    "joint_optimizer_lr.prototype_layers": 0.002,
+    "joint_optimizer_lr.last_layer": 0.07,
+    "fine_tune_optimizer_lr": 0.01,
+    "joint_scheduler.gamma": 0.5,
+    "joint_scheduler.step_size": 30,
+    "coefs.align": 5.0,
+    "coefs.tanh": 2.0,
+    "coefs.uniform": 0.0,
+    "coefs.classification": 2.0,
+    "joint_epochs": 100,
+    "warmup_epochs": 5,
+    "fine_tune_epochs": 0,
+    "features": "resnet50",
+    "augmentation_pipeline": [["geometric", "medium"], ["pipnet", "large"]],
+}
+
+# NoCrop
+# pipnet_dogs_params = {
+#     "model": "pipnet",
+#     "batch_size": 64,
+#     "init_feature_weights": True,
+#     "warm_optimizer_lr": 1.7e-05,
+#     "joint_optimizer_lr.backbone": 2.8e-05,
+#     "joint_optimizer_lr.prototype_layers": 0.0004,
+#     "joint_optimizer_lr.last_layer": 0.032,
+#     "fine_tune_optimizer_lr": 0.01,
+#     "joint_scheduler.gamma": 0.5,
+#     "joint_scheduler.step_size": 30,
+#     "coefs.align": 5.0,
+#     "coefs.tanh": 2.0,
+#     "coefs.uniform": 0.0,
+#     "coefs.classification": 2.0,
+#     "joint_epochs": 100,
+#     "warmup_epochs": 5,
+#     "fine_tune_epochs": 0,
+#     "features": "resnet50",
+#     "n_trials": 50,
+#     "augmentation_pipeline": [["geometric", "medium"], ["pipnet", "large"]],
+# }
 
 pipnet_cars196_params = {
     "model": "pipnet",
@@ -38,8 +108,32 @@ pipnet_cars196_params = {
     "joint_epochs": 100,
     "warmup_epochs": 10,
     "fine_tune_epochs": 0,
+    "features": "resnet50",
     "augmentation_pipeline": [["geometric", "medium"], ["pipnet", "large"]],
 }
+
+# NoCrop
+# pipnet_cars196_params = {
+#     "model": "pipnet",
+#     "batch_size": 64,
+#     "init_feature_weights": True,
+#     "warm_optimizer_lr": 1e-05,
+#     "joint_optimizer_lr.backbone": 0.0001,
+#     "joint_optimizer_lr.prototype_layers": 0.0006,
+#     "joint_optimizer_lr.last_layer": 0.08,
+#     "fine_tune_optimizer_lr": 0.01,
+#     "joint_scheduler.gamma": 0.5,
+#     "joint_scheduler.step_size": 35,
+#     "coefs.align": 5.0,
+#     "coefs.tanh": 2.0,
+#     "coefs.uniform": 0.0,
+#     "coefs.classification": 2.0,
+#     "joint_epochs": 100,
+#     "warmup_epochs": 10,
+#     "fine_tune_epochs": 0,
+#     "features": "resnet50",
+#     "augmentation_pipeline": [["geometric", "medium"], ["pipnet", "large"]],
+# }
 
 pipnet_nico_params = {
     "model": "pipnet",

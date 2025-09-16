@@ -9,8 +9,8 @@ import copy
 import torch
 import torch.nn as nn
 import torch.utils.model_zoo as model_zoo
-from transformers import AutoModel
 from torchsummary import summary
+from transformers import AutoModel
 
 model_urls = {
     "resnet18": "https://download.pytorch.org/models/resnet18-5c106cde.pth",
@@ -26,7 +26,9 @@ model_dir = "./pretrained_models"
 
 def conv3x3(in_planes, out_planes, stride=1):
     """3x3 convolution with padding"""
-    return nn.Conv2d(in_planes, out_planes, kernel_size=3, stride=stride, padding=1, bias=False)
+    return nn.Conv2d(
+        in_planes, out_planes, kernel_size=3, stride=stride, padding=1, bias=False
+    )
 
 
 def conv1x1(in_planes, out_planes, stride=1):
@@ -203,7 +205,9 @@ class ResNet_features(nn.Module):
 
         # keep track of every block's conv size, stride size, and padding size
         for each_block in layers:
-            block_kernel_sizes, block_strides, block_paddings = each_block.block_conv_info()
+            block_kernel_sizes, block_strides, block_paddings = (
+                each_block.block_conv_info()
+            )
             self.kernel_sizes.extend(block_kernel_sizes)
             self.strides.extend(block_strides)
             self.paddings.extend(block_paddings)

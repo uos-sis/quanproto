@@ -87,15 +87,11 @@ class ContinuityDataset(Dataset):
             largest_bbox = F.combine_bounding_boxes(self.bboxes[idx])
 
             partlocs = [p for p in self.partlocs[idx].values()]
-            t1 = self.trans_pip1(
-                image=img, cropping_bbox=largest_bbox, keypoints=partlocs
-            )
+            t1 = self.trans_pip1(image=img, cropping_bbox=largest_bbox, keypoints=partlocs)
             tf_partlocs = t1["keypoints"]
             img_t1 = t1["image"]
 
-            t2 = self.trans_pip2(
-                image=img, cropping_bbox=largest_bbox, keypoints=partlocs
-            )
+            t2 = self.trans_pip2(image=img, cropping_bbox=largest_bbox, keypoints=partlocs)
             img_t2 = t2["image"]
             # INFO t2 has only additional photometric augmentations so the keypoints are the same
 
@@ -137,8 +133,7 @@ class ContinuityDataset(Dataset):
         if hasattr(self, "partlocs"):
             # overwrite the -1 entries with the actual partlocs
             for i, point in enumerate(tf_partlocs):
-                # switch the value from x,y to y,x
-                partlocs[i] = torch.tensor([point[1], point[0]], dtype=torch.float32)
+                partlocs[i] = torch.tensor([point[0], point[1]], dtype=torch.float32)
 
         return img_t1, img_t2, partlocs, labels
 

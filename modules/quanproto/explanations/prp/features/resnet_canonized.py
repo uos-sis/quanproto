@@ -265,6 +265,18 @@ def resnet50_canonized(pretrained=False, progress=True, **kwargs):
     return _resnet_canonized("resnet50", Bottleneck_fused, [3, 4, 6, 3], **kwargs)
 
 
+def resnet50ext_canonized(pretrained=False, progress=True, **kwargs):
+    r"""ResNet-50 model from
+    `"Deep Residual Learning for Image Recognition" <https://arxiv.org/pdf/1512.03385.pdf>`_
+    Args:
+        pretrained (bool): If True, returns a model pre-trained on ImageNet
+        progress (bool): If True, displays a progress bar of the download to stderr
+    """
+    return _resnet_canonized(
+        "resnet50", Bottleneck_fused, [3, 4, 6, 3], strides=[1, 2, 1, 1], **kwargs
+    )
+
+
 def resnet34_canonized(pretrained=False, progress=True, **kwargs):
     r"""ResNet-18 model from
     `"Deep Residual Learning for Image Recognition" <https://arxiv.org/pdf/1512.03385.pdf>`_

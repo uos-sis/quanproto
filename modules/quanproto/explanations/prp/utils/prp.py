@@ -6,6 +6,7 @@ canonized_feature_dict = {
     "resnet18": resnet18_canonized,
     "resnet34": resnet34_canonized,
     "resnet50": resnet50_canonized,
+    "resnet50ext": resnet50ext_canonized,
     "resnet101": resnet101_canonized,
     "resnet152": resnet152_canonized,
 }

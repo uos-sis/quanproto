@@ -1,10 +1,11 @@
 import os
 
 import pandas as pd
-from quanproto.evaluation.folder_utils import get_aggregate_results, load_results_table
 from quanproto.utils.workspace import EXPERIMENTS_PATH
 
-FOLDER = f"{EXPERIMENTS_PATH}/ProtoPool"
+from quanproto.evaluation.folder_utils import get_aggregate_results, load_results_table
+
+FOLDER = f"{EXPERIMENTS_PATH}/PIPNet"
 
 experiment_config = {
     "experiment_dir": FOLDER,
@@ -31,8 +32,7 @@ if __name__ == "__main__":
 
             # Create a new DataFrame with the "mean ± std" format
             formatted_data = {
-                col: f"{mean_row[col]:.2f} $\\pm$ {std_row[col]:.2f}"
-                for col in df.columns
+                col: f"{mean_row[col]:.2f} $\\pm$ {std_row[col]:.2f}" for col in df.columns
             }
             df = pd.DataFrame(formatted_data, index=[dataset])
             technique_df = pd.concat([technique_df, df])

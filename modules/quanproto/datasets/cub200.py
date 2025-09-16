@@ -13,7 +13,7 @@ from quanproto.datasets.interfaces import DatasetBase
 
 
 class CUB200(DatasetBase):
-    def __init__(self, dataset_dir, dataset_name: str = "CUB_200_2011"):
+    def __init__(self, dataset_dir, dataset_name: str = "cub200"):
         # dataset_name = CUB_200_2011_URL.split("/")[-1].split(".")[0]
         super().__init__(dataset_dir, dataset_name)
 
@@ -56,9 +56,7 @@ class CUB200(DatasetBase):
 
                 # rename the dataset folder to the dataset name
                 os.rename(
-                    os.path.join(
-                        dataset_dir, CUB_200_2011_URL.split("/")[-1].split(".")[0]
-                    ),
+                    os.path.join(dataset_dir, CUB_200_2011_URL.split("/")[-1].split(".")[0]),
                     self._root_dir,
                 )
             else:
@@ -80,9 +78,7 @@ class CUB200(DatasetBase):
             # subtract 1 from the class ids so that they start from 0
             class_names = []
             with open(os.path.join(self._root_dir, "class_names.txt"), "r") as f:
-                class_names = [
-                    f"{int(line.split()[0]) - 1} {line.split()[1]}\n" for line in f
-                ]
+                class_names = [f"{int(line.split()[0]) - 1} {line.split()[1]}\n" for line in f]
             with open(os.path.join(self._root_dir, "class_names.txt"), "w") as f:
                 f.writelines(class_names)
 
@@ -94,9 +90,7 @@ class CUB200(DatasetBase):
             # subtract 1 from the sample ids so that they start from 0
             sample_names = []
             with open(os.path.join(self._root_dir, "sample_names.txt"), "r") as f:
-                sample_names = [
-                    f"{int(line.split()[0]) - 1} {line.split()[1]}\n" for line in f
-                ]
+                sample_names = [f"{int(line.split()[0]) - 1} {line.split()[1]}\n" for line in f]
             with open(os.path.join(self._root_dir, "sample_names.txt"), "w") as f:
                 f.writelines(sample_names)
 
@@ -109,8 +103,7 @@ class CUB200(DatasetBase):
             sample_labels = []
             with open(os.path.join(self._root_dir, "sample_labels.txt"), "r") as f:
                 sample_labels = [
-                    f"{int(line.split()[0]) -1} {int(line.split()[1]) -1}\n"
-                    for line in f
+                    f"{int(line.split()[0]) -1} {int(line.split()[1]) -1}\n" for line in f
                 ]
             with open(os.path.join(self._root_dir, "sample_labels.txt"), "w") as f:
                 f.writelines(sample_labels)
@@ -118,9 +111,7 @@ class CUB200(DatasetBase):
             # subtract 1 from the class ids so that they start from 0 in the train_test_split.txt file
             train_test_split = []
             with open(os.path.join(self._root_dir, "train_test_split.txt"), "r") as f:
-                train_test_split = [
-                    f"{int(line.split()[0]) - 1} {line.split()[1]}\n" for line in f
-                ]
+                train_test_split = [f"{int(line.split()[0]) - 1} {line.split()[1]}\n" for line in f]
             with open(os.path.join(self._root_dir, "train_test_split.txt"), "w") as f:
                 f.writelines(train_test_split)
 
@@ -138,42 +129,31 @@ class CUB200(DatasetBase):
             # file has the format <image_id> <part_id> <x> <y> <visible>
             with open(os.path.join(self._root_dir, "parts", "part_locs.txt"), "r") as f:
                 part_locs = [
-                    f"{int(line.split()[0]) - 1} {' '.join(line.split()[1:])}\n"
-                    for line in f
+                    f"{int(line.split()[0]) - 1} {' '.join(line.split()[1:])}\n" for line in f
                 ]
             with open(os.path.join(self._root_dir, "parts", "part_locs.txt"), "w") as f:
                 f.writelines(part_locs)
 
             # subtract 1 from the part_click_locs.txt file
             # file has the format <image_id> <part_id> <x> <y> <visible> <time>
-            with open(
-                os.path.join(self._root_dir, "parts", "part_click_locs.txt"), "r"
-            ) as f:
+            with open(os.path.join(self._root_dir, "parts", "part_click_locs.txt"), "r") as f:
                 part_click_locs = [
-                    f"{int(line.split()[0]) - 1} {' '.join(line.split()[1:])}\n"
-                    for line in f
+                    f"{int(line.split()[0]) - 1} {' '.join(line.split()[1:])}\n" for line in f
                 ]
-            with open(
-                os.path.join(self._root_dir, "parts", "part_click_locs.txt"), "w"
-            ) as f:
+            with open(os.path.join(self._root_dir, "parts", "part_click_locs.txt"), "w") as f:
                 f.writelines(part_click_locs)
 
             # subtract 1 from the image_attribute_labels.txt file
             # file has the format <image_id> <attribute_id> <is_present> <certainty_id> <time>
             with open(
-                os.path.join(
-                    self._root_dir, "attributes", "image_attribute_labels.txt"
-                ),
+                os.path.join(self._root_dir, "attributes", "image_attribute_labels.txt"),
                 "r",
             ) as f:
                 image_attribute_labels = [
-                    f"{int(line.split()[0]) - 1} {' '.join(line.split()[1:])}\n"
-                    for line in f
+                    f"{int(line.split()[0]) - 1} {' '.join(line.split()[1:])}\n" for line in f
                 ]
             with open(
-                os.path.join(
-                    self._root_dir, "attributes", "image_attribute_labels.txt"
-                ),
+                os.path.join(self._root_dir, "attributes", "image_attribute_labels.txt"),
                 "w",
             ) as f:
                 f.writelines(image_attribute_labels)
@@ -203,9 +183,7 @@ class CUB200(DatasetBase):
                 )
 
             # get all folder in the segmentation folder
-            segmentation_folders = os.listdir(
-                os.path.join(self._root_dir, segmentation_name)
-            )
+            segmentation_folders = os.listdir(os.path.join(self._root_dir, segmentation_name))
 
             # move all the segmentation folders to segmentations/original
             os.makedirs(os.path.join(self._root_dir, "segmentations", "original"))
@@ -226,18 +204,14 @@ class CUB200(DatasetBase):
                 # remove .png from the end of the segmentation name
                 segmentation_folder = ".".join(segmentation_name.split(".")[:-1])
                 os.makedirs(
-                    os.path.join(
-                        self._root_dir, "segmentations", "original", segmentation_folder
-                    )
+                    os.path.join(self._root_dir, "segmentations", "original", segmentation_folder)
                 )
 
                 new_segmentation_name = os.path.join(segmentation_folder, "mask_0.png")
 
                 # rename the segmentation mask
                 os.rename(
-                    os.path.join(
-                        self._root_dir, "segmentations", "original", segmentation_name
-                    ),
+                    os.path.join(self._root_dir, "segmentations", "original", segmentation_name),
                     os.path.join(
                         self._root_dir,
                         "segmentations",
@@ -299,12 +273,8 @@ class CUB200(DatasetBase):
                     for j in range(1, 312)
                 }
 
-        with open(
-            os.path.join(self._root_dir, "attributes", "attributes.txt"), "r"
-        ) as f:
-            self._attribute_names = {
-                int(line.split()[0]): line.split()[1] for line in f
-            }
+        with open(os.path.join(self._root_dir, "attributes", "attributes.txt"), "r") as f:
+            self._attribute_names = {int(line.split()[0]): line.split()[1] for line in f}
 
     def make_mini_dataset(self, n_classes: int = 10) -> None:
         super().make_mini_dataset(n_classes)
@@ -341,9 +311,7 @@ class CUB200(DatasetBase):
             for key, val in self._part_locs.items():
                 for part_id in range(15):
                     if part_id in val:
-                        f.write(
-                            f"{key} {part_id} {' '.join(map(str, val[part_id]))} 1\n"
-                        )
+                        f.write(f"{key} {part_id} {' '.join(map(str, val[part_id]))} 1\n")
                     else:
                         f.write(f"{key} {part_id} 0.0 0.0 0\n")
 
@@ -357,9 +325,7 @@ class CUB200(DatasetBase):
                 for j in range(312):
                     new_attributes.append(attributes[i * 312 + j])
 
-        os.remove(
-            os.path.join(self._root_dir, "attributes", "image_attribute_labels.txt")
-        )
+        os.remove(os.path.join(self._root_dir, "attributes", "image_attribute_labels.txt"))
         with open(
             os.path.join(self._root_dir, "attributes", "image_attribute_labels.txt"),
             "w",
@@ -420,31 +386,5 @@ class CUB200(DatasetBase):
         info["partlocs"] = [self._part_locs[img] for img in info["ids"]]
 
         info["attributes"] = [self._sample_attributes[img] for img in info["ids"]]
-
-        for id, path in zip(info["ids"], info["paths"]):
-            masks_info = self._segmentation_info["original"][id]
-            masks_paths = [
-                os.path.join(
-                    ".".join(path.split(".")[:-1]), masks_info["masks"][mask_id]
-                )
-                for mask_id in masks_info["masks"]
-            ]
-
-            if "masks" not in info:
-                info["masks"] = {}
-            if "original" not in info["masks"]:
-                info["masks"]["original"] = {}
-                info["masks"]["original"]["paths"] = []
-
-            info["masks"]["original"]["paths"].append(masks_paths)
-
-            for prop_key, prop_dic in masks_info.items():
-                if prop_key == "masks":
-                    continue
-                if prop_key not in info["masks"]["original"]:
-                    info["masks"]["original"][prop_key] = []
-                info["masks"]["original"][prop_key].append(
-                    [val for val in prop_dic.values()]
-                )
 
         return info

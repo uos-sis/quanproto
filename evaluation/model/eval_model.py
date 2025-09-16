@@ -1,7 +1,8 @@
 from eval_args import parser
+from quanproto.utils.workspace import EXPERIMENTS_PATH
+
 from quanproto.evaluation.config_parser import get_dataloader_fn_dict
 from quanproto.evaluation.folder_utils import experiments_evaluation
-from quanproto.utils.workspace import EXPERIMENTS_PATH
 
 args = parser.parse_args()
 
@@ -36,20 +37,25 @@ techniques = {
     },
     "compactness": {
         "local_size_threshold": 0.1,
-        "metrics": ["global size", "sparsity", "npr", "local size"],
+        "metrics": [
+            "global size",
+            "sparsity",
+            "npr",
+            # "local size",  # only quanproto paper
+        ],
     },
     "contrastivity": {
         "num_prototypes_per_sample": 5,
         "metrics": [
-            # "vlc",
+            "vlc",  # only protomask paper
             # "vac",
-            "plc",
-            "palc",
-            "intra pd",  # INFO: only ProtoPNet, ProtoPool, ProtoTree
-            "intra fd",
+            # "plc",  # only quanproto paper
+            # "palc",  # only quanproto paper
+            # "intra pd",  # INFO: only ProtoPNet, ProtoPool, ProtoTree
+            # "intra fd",  # only quanproto paper
             # "inter pd",  # INFO: only ProtoPNet, ProtoPool, ProtoTree
-            # "inter fd",
-            "entropy",
+            # "inter fd",  # only quanproto paper will be added later
+            # "entropy",  # only quanproto paper
             # "histogram",
             # "projection",
         ],
@@ -75,9 +81,9 @@ techniques = {
         "num_prototypes_per_sample": 5,
         "metrics": [
             "ior",
-            "oirr",
+            # "oirr",
             "object overlap",
-            "iou",
+            # "iou",
             "background overlap",
             "consistency",
         ],
@@ -95,10 +101,10 @@ techniques = {
 }
 
 # if not multilabel add inter distances to contrastivity
-if not MULTI_LABEL:
-    techniques["contrastivity"]["metrics"].extend(["inter pd"])
-    techniques["contrastivity"]["metrics"].extend(["inter fd"])
-    techniques["continuity"]["metrics"].extend(["crc"])
+# if not MULTI_LABEL:
+# techniques["contrastivity"]["metrics"].extend(["inter pd"])
+# techniques["contrastivity"]["metrics"].extend(["inter fd"])
+# techniques["continuity"]["metrics"].extend(["crc"])
 
 # remove the techniques that are not selected
 techniques = {k: v for k, v in techniques.items() if args.__dict__[k]}

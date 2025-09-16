@@ -48,9 +48,7 @@ def test_mask_intersection_over_union_basic():
     output = mask_intersection_over_union(map_batch, mask_batch)
 
     # Check the output
-    expected_output = torch.tensor(
-        [[0.333333, 0.333333, 0.333333], [0.333333, 0.333333, 0.333333]]
-    )
+    expected_output = torch.tensor([[0.333333, 0.333333, 0.333333], [0.333333, 0.333333, 0.333333]])
 
     assert torch.allclose(output, expected_output)
 
@@ -880,7 +878,7 @@ def test_boundingbox_consistency_basic():
 
     assert bbox_batch.shape == (1, 2, 4)
 
-    # part locations batch (B x K x 2)
+    # part locations batch (B x K x 2) (x, y)
     partlocs = torch.tensor(
         [
             [[3, 1],
@@ -942,14 +940,14 @@ def test_map_consistency_basic():
 
     assert map_batch.shape == (1, 2, 7, 7)
 
-    # part locations batch (B x K x 2)
+    # part locations batch (B x K x 2) (x, y)
     partlocs = torch.tensor(
         [
-            [[3, 1],
-             [3, 3],
-             [0, 3], # on the edge of bb1 
-             [6, 3],
-             [3,5]],
+            [[1,3],
+             [3,3],
+             [3,0], # on the edge of bb1 
+             [3,6],
+             [5,3]],
         ]
     )
 
@@ -969,8 +967,8 @@ def test_map_consistency_basic():
     # B x N x K
     expected_output = torch.tensor(
         [
-            [[1, 2, 3, 0, 0],
-             [0, 2, 0, 0, 5]],
+            [[1, 2, 3, 0, 5],
+             [1, 2, 0, 4, 5]],
         ]
     )
     assert expected_output.shape == (1, 2, 5)

@@ -1,18 +1,21 @@
-import os
 import math
-import pandas as pd
-import numpy as np
-import skimage as ski
 import multiprocessing
-import matplotlib.pyplot as plt
+import os
 import shutil
+
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import skimage as ski
 from skimage import io
 
 figure_height = 5
 figure_width = 8
 
 
-def save_statistics(statistics: pd.DataFrame, folder: os.path, file_prefix: str) -> None:
+def save_statistics(
+    statistics: pd.DataFrame, folder: os.path, file_prefix: str
+) -> None:
     if not os.path.exists(folder):
         os.makedirs(folder)
 
@@ -158,7 +161,14 @@ def stratified_cross_validation_statistics(sample_class_dic: dict) -> pd.DataFra
     # use unique to get the number of samples per class
     _, class_counts = np.unique(class_labels, return_counts=True)
 
-    train_test_splits = [(0.5, 0.5), (0.6, 0.4), (0.7, 0.3), (0.8, 0.2), (0.9, 0.1), (1.0, 0.0)]
+    train_test_splits = [
+        (0.5, 0.5),
+        (0.6, 0.4),
+        (0.7, 0.3),
+        (0.8, 0.2),
+        (0.9, 0.1),
+        (1.0, 0.0),
+    ]
     fold_splits = [2, 3, 4, 5]
 
     # Create a pandas DataFrame to store the statistics
@@ -221,9 +231,15 @@ def stratified_cross_validation_statistics(sample_class_dic: dict) -> pd.DataFra
             )
 
             # val
-            statistic.iloc[i * 3, 4 + (fold - 2) * 2] = math.ceil(train_min / float(fold))
-            statistic.iloc[i * 3 + 1, 4 + (fold - 2) * 2] = math.ceil(train_mean / float(fold))
-            statistic.iloc[i * 3 + 2, 4 + (fold - 2) * 2] = math.ceil(train_max / float(fold))
+            statistic.iloc[i * 3, 4 + (fold - 2) * 2] = math.ceil(
+                train_min / float(fold)
+            )
+            statistic.iloc[i * 3 + 1, 4 + (fold - 2) * 2] = math.ceil(
+                train_mean / float(fold)
+            )
+            statistic.iloc[i * 3 + 2, 4 + (fold - 2) * 2] = math.ceil(
+                train_max / float(fold)
+            )
 
     return statistic
 
@@ -251,7 +267,9 @@ def mask_statistics(num_masks_x_labels: np.array) -> pd.DataFrame:
     statistic.loc["std masks/image", "statistics"] = round(np.std(sample_num_masks))
 
     statistic.loc["min masks/class", "statistics"] = np.min(num_masks_per_class)
-    statistic.loc["mean masks/class", "statistics"] = round(np.mean(num_masks_per_class))
+    statistic.loc["mean masks/class", "statistics"] = round(
+        np.mean(num_masks_per_class)
+    )
     statistic.loc["max masks/class", "statistics"] = np.max(num_masks_per_class)
     statistic.loc["std masks/class", "statistics"] = round(np.std(num_masks_per_class))
 
@@ -269,7 +287,9 @@ def class_statistics(class_labels: np.array) -> pd.DataFrame:
     statistic.loc["min sample/class", "statistics"] = min(class_counts)
     statistic.loc["mean sample/class", "statistics"] = round(np.mean(class_counts))
     statistic.loc["max sample/class", "statistics"] = max(class_counts)
-    statistic.loc["std sample/class", "statistics"] = round(np.std(class_counts), ndigits=2)
+    statistic.loc["std sample/class", "statistics"] = round(
+        np.std(class_counts), ndigits=2
+    )
 
     return statistic
 
@@ -374,7 +394,9 @@ def color_histogram(image_dir: os.path) -> tuple[np.array, np.array]:
 
     # calculate the grayscale channel using the luminance coefficients
     grayscale_channel = (
-        0.2989 * total_histogram[0] + 0.5870 * total_histogram[1] + 0.1140 * total_histogram[2]
+        0.2989 * total_histogram[0]
+        + 0.5870 * total_histogram[1]
+        + 0.1140 * total_histogram[2]
     )
 
     # reshape to (1, bins)
@@ -423,7 +445,12 @@ def segmentation_folder_statistics(
     counts, labels = mask_histogram(num_masks_x_labels)
     if prefix is None:
         save_class_histogram(
-            counts, labels, log_dir, "mask_class_distribution", y_label="Mask Mean", bars=bars
+            counts,
+            labels,
+            log_dir,
+            "mask_class_distribution",
+            y_label="Mask Mean",
+            bars=bars,
         )
     else:
         save_class_histogram(
@@ -463,9 +490,13 @@ def segmentation_size_statistics(
     if save_md:
         # save as markdown table
         table = pd.DataFrame(
-            mask_size_means, index=np.arange(1, max_masks + 1), columns=["Mean Mask Size"]
+            mask_size_means,
+            index=np.arange(1, max_masks + 1),
+            columns=["Mean Mask Size"],
         ).to_markdown()
-        with open(os.path.join(folder, prefix + "_size_distribution" + ".md"), "w") as file:
+        with open(
+            os.path.join(folder, prefix + "_size_distribution" + ".md"), "w"
+        ) as file:
             file.write(table)
 
     threshold = 0.01
@@ -569,14 +600,16 @@ def segmentation_object_overlap_statistics(
         ]
         all_args.append(
             (
-                os.path.join(dataset._segmentation_dir, "original", object_masks["paths"][i][0]),
+                os.path.join(
+                    dataset._segmentation_dir, "original", object_masks["paths"][i][0]
+                ),
                 segmentation_paths,
                 num_masks[i],
                 max_masks,
             )
         )
 
-    with Pool() as pool:
+    with multiprocessing.Pool(processes=multiprocessing.cpu_count()) as pool:
         results = pool.starmap(process_masks, all_args)
 
     # Combine results
@@ -617,9 +650,13 @@ def segmentation_object_overlap_statistics(
     if save_md:
         # save as markdown table
         table = pd.DataFrame(
-            mask_overlap_means, index=np.arange(1, max_masks + 1), columns=["Mean Mask Size"]
+            mask_overlap_means,
+            index=np.arange(1, max_masks + 1),
+            columns=["Mean Mask Size"],
         ).to_markdown()
-        with open(os.path.join(folder, prefix + "_overlap_distribution" + ".md"), "w") as file:
+        with open(
+            os.path.join(folder, prefix + "_overlap_distribution" + ".md"), "w"
+        ) as file:
             file.write(table)
 
 
@@ -645,7 +682,9 @@ def image_folder_statistics(
     if prefix is None:
         save_class_histogram(counts, labels, log_dir, "class_distribution", bars=bars)
     else:
-        save_class_histogram(counts, labels, log_dir, f"{prefix}_class_distribution", bars=bars)
+        save_class_histogram(
+            counts, labels, log_dir, f"{prefix}_class_distribution", bars=bars
+        )
 
     # Image Histograms
     counts, vals = color_histogram(image_dir)

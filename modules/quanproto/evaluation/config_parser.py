@@ -5,6 +5,7 @@ from quanproto.dataloader.params import BATCH_SIZE, NUM_DATALOADER_WORKERS, PIN_
 from quanproto.dataloader.single_augmentation import (
     test_dataloader,
     validation_dataloader,
+    prune_dataloader,
 )
 from quanproto.techniques import (
     compactness,
@@ -124,7 +125,7 @@ def get_dataloader_fn_dict(
             },
         },
         "topk_prototype_images": {
-            "fn": dataloder_to_use,
+            "fn": prune_dataloader,
             "args": {
                 "batch_size": batch_size,
                 "num_workers": num_workers,

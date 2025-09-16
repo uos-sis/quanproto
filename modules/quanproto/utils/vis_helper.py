@@ -11,13 +11,8 @@ import torch
 
 
 def invert_normalize(img, mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]):
-    s = torch.tensor(np.asarray(std, dtype=np.float32)).unsqueeze(1).unsqueeze(2).cuda()
-    m = (
-        torch.tensor(np.asarray(mean, dtype=np.float32))
-        .unsqueeze(1)
-        .unsqueeze(2)
-        .cuda()
-    )
+    s = torch.tensor(np.asarray(std, dtype=np.float32)).unsqueeze(1).unsqueeze(2).to(img.device)
+    m = torch.tensor(np.asarray(mean, dtype=np.float32)).unsqueeze(1).unsqueeze(2).to(img.device)
 
     res = img * s + m
 
@@ -28,13 +23,8 @@ def invert_normalize(img, mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
 
 
 def normalize(img, mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]):
-    s = torch.tensor(np.asarray(std, dtype=np.float32)).unsqueeze(1).unsqueeze(2).cuda()
-    m = (
-        torch.tensor(np.asarray(mean, dtype=np.float32))
-        .unsqueeze(1)
-        .unsqueeze(2)
-        .cuda()
-    )
+    s = torch.tensor(np.asarray(std, dtype=np.float32)).unsqueeze(1).unsqueeze(2).to(img.device)
+    m = torch.tensor(np.asarray(mean, dtype=np.float32)).unsqueeze(1).unsqueeze(2).to(img.device)
 
     res = (img - m) / s
     return res
@@ -55,8 +45,8 @@ def save_image_mask(img, saliency_map, file_path):
     img = img.squeeze(0).permute(1, 2, 0).numpy()
 
     fig, ax = plt.subplots()
-    ax.imshow(img, alpha=0.5)
-    overlay = ax.imshow(saliency_map.cpu(), cmap="viridis", alpha=0.5)
+    ax.imshow(img, alpha=0.6)
+    overlay = ax.imshow(saliency_map.cpu(), cmap="viridis", alpha=0.4)
 
     # Add a colorbar
     # cbar = plt.colorbar(overlay, ax=ax)
@@ -172,8 +162,10 @@ def save_image(image, file_path):
     image (torch.Tensor): The input image.
     target_dir (str): The target directory.
     """
-    image = invert_normalize(image).cpu()
-    image = image.squeeze(0).permute(1, 2, 0).numpy()
+    # if tensor
+    if isinstance(image, torch.Tensor):
+        image = invert_normalize(image).cpu()
+        image = image.squeeze(0).permute(1, 2, 0).numpy()
 
     file_dir = os.path.dirname(file_path)
     os.makedirs(file_dir, exist_ok=True)
@@ -262,29 +254,33 @@ def show_mask_over_image(image_path, mask_path, save_path=None):
     image_bgra = cv2.cvtColor(image, cv2.COLOR_BGR2BGRA)
     overlay = np.zeros_like(image_bgra, dtype=np.float32)
 
-    # Use neon red for overlay color
-    neon_red = [75, 5, 249]
+    # Generate random colors if not provided
+    colors = plt.cm.get_cmap("tab10", len(masks)).colors
 
     # Apply each mask to the overlay
     for i, mask in enumerate(masks):
-        if i == 0:  # first mask is always neon_red
-            overlay[mask] = np.concatenate([neon_red, [0.35]])
-            continue
-        # generate colors for all following masks
-        random_color = generate_neon_color()
-        overlay[mask] = np.concatenate([random_color, [0.35]])
+        overlay[mask] = colors[i]
 
     # Blend overlay with image
-    alpha = overlay[..., 3]
-    for c in range(3):
-        image_bgra[..., c] = image_bgra[..., c] * (1 - alpha) + overlay[..., c] * alpha
-
-    # Display image
-    plt.imshow(cv2.cvtColor(image_bgra, cv2.COLOR_BGRA2RGBA))
+    alpha = 0.7
+    image_bgra[:, :, 3] = (1 - alpha) * 255
+    overlay = (overlay * 255).astype(np.uint8)
+    blended = cv2.addWeighted(image_bgra, 1, overlay, alpha, 0)
+    blended = cv2.cvtColor(blended, cv2.COLOR_BGRA2BGR)
+    # resize blended image to square shape
+    size = max(blended.shape[:2])
+    blended = cv2.resize(blended, (size, size))
+    plt.imshow(blended)
     plt.axis("off")
 
-    # Save if save_path is provided
-    if save_path:
-        plt.savefig(save_path)
 
-    plt.show()
+def show_masks_over_img(img, masks):
+    ax = plt.gca()
+    ax.set_autoscale_on(False)
+
+    img = np.ones((img.shape[0], img.shape[1], 4))
+    img[:, :, 3] = 0
+    for m in masks:
+        color_mask = np.concatenate([np.random.random(3), [0.35]])
+        img[m] = color_mask
+    ax.imshow(img)

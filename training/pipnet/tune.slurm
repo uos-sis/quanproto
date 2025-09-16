@@ -14,7 +14,7 @@ script_name=(
 home_dir=$(echo ~)
 # Array to store script arguments
 script_arguments=(
-    "--features resnet50 --dataset_dir $home_dir/data/quanproto --dataset awa2 --fold_idx 0 --crop_input --num_workers 16 --seed 42 --tune --n_trials 100"
+    "--features resnet50 --dataset awa2 --fold_idx 0 --crop_input --num_workers 16 --seed 42 --tune --n_trials 100"
 )
 
 # Iterate over the scripts and run them

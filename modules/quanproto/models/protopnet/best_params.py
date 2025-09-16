@@ -1,4 +1,3 @@
-# With input bb cropping + resnet50
 protopnet_cub200_params = {
     "model": "protopnet",
     "batch_size": 64,
@@ -19,8 +18,83 @@ protopnet_cub200_params = {
     "coefs.l1": 0.001,
     "prototypes_per_class": 10,
     "prototype_shape": [128, 1, 1],
+    "features": "resnet50",
     "augmentation_pipeline": [["geometric", "medium"], ["photometric", "medium"]],
 }
+
+# NoCrop
+# protopnet_cub200_params = {
+#     "model": "protopnet",
+#     "batch_size": 64,
+#     "init_feature_weights": True,
+#     "warm_optimizer_lr": 2.8e-05,
+#     "joint_optimizer_lr.backbone": 3.2e-05,
+#     "joint_optimizer_lr.add_on_layers": 0.0001,
+#     "joint_optimizer_lr.prototype_vectors": 0.0023,
+#     "fine_tune_optimizer_lr": 0.002,
+#     "joint_scheduler.gamma": 0.5,
+#     "joint_scheduler.step_size": 30,
+#     "joint_epochs": 100,
+#     "warmup_epochs": 10,
+#     "fine_tune_epochs": 10,
+#     "coefs.crs_ent": 1,
+#     "coefs.clst": 0.8,
+#     "coefs.sep": 0.08,
+#     "coefs.l1": 0.001,
+#     "prototypes_per_class": 10,
+#     "prototype_shape": [128, 1, 1],
+#     "features": "resnet50",
+#     "augmentation_pipeline": [["geometric", "medium"], ["photometric", "medium"]],
+# }
+
+protopnet_dogs_params = {
+    "model": "protopnet",
+    "batch_size": 64,
+    "init_feature_weights": True,
+    "warm_optimizer_lr": 5e-05,
+    "joint_optimizer_lr.backbone": 5e-05,
+    "joint_optimizer_lr.add_on_layers": 5e-05,
+    "joint_optimizer_lr.prototype_vectors": 0.003,
+    "fine_tune_optimizer_lr": 0.0003,
+    "joint_scheduler.gamma": 0.5,
+    "joint_scheduler.step_size": 35,
+    "joint_epochs": 100,
+    "warmup_epochs": 5,
+    "fine_tune_epochs": 10,
+    "coefs.crs_ent": 1,
+    "coefs.clst": 0.8,
+    "coefs.sep": 0.08,
+    "coefs.l1": 0.001,
+    "prototypes_per_class": 10,
+    "prototype_shape": [128, 1, 1],
+    "features": "resnet50",
+    "augmentation_pipeline": [["geometric", "medium"], ["photometric", "medium"]],
+}
+
+# NoCrop 28.05
+# protopnet_dogs_params = {
+#     "model": "protopnet",
+#     "batch_size": 64,
+#     "init_feature_weights": True,
+#     "warm_optimizer_lr": 1.2e-05,
+#     "joint_optimizer_lr.backbone": 3.1e-05,
+#     "joint_optimizer_lr.add_on_layers": 0.0002,
+#     "joint_optimizer_lr.prototype_vectors": 0.001,
+#     "fine_tune_optimizer_lr": 0.0009,
+#     "joint_scheduler.gamma": 0.5,
+#     "joint_scheduler.step_size": 30,
+#     "joint_epochs": 100,
+#     "warmup_epochs": 5,
+#     "fine_tune_epochs": 10,
+#     "coefs.crs_ent": 1,
+#     "coefs.clst": 0.8,
+#     "coefs.sep": 0.08,
+#     "coefs.l1": 0.001,
+#     "prototypes_per_class": 10,
+#     "prototype_shape": [128, 1, 1],
+#     "features": "resnet50",
+#     "augmentation_pipeline": [["geometric", "medium"], ["photometric", "medium"]],
+# }
 
 protopnet_cars196_params = {
     "model": "protopnet",
@@ -42,8 +116,34 @@ protopnet_cars196_params = {
     "coefs.l1": 0.001,
     "prototypes_per_class": 10,
     "prototype_shape": [128, 1, 1],
+    "features": "resnet50",
     "augmentation_pipeline": [["geometric", "medium"], ["photometric", "medium"]],
 }
+
+# NoCrop 28.05
+# protopnet_cars196_params = {
+#     "model": "protopnet",
+#     "batch_size": 64,
+#     "init_feature_weights": True,
+#     "warm_optimizer_lr": 3.7e-05,
+#     "joint_optimizer_lr.backbone": 4.4e-05,
+#     "joint_optimizer_lr.add_on_layers": 2.4e-05,
+#     "joint_optimizer_lr.prototype_vectors": 0.0023,
+#     "fine_tune_optimizer_lr": 7.7e-05,
+#     "joint_scheduler.gamma": 0.5,
+#     "joint_scheduler.step_size": 30,
+#     "joint_epochs": 100,
+#     "warmup_epochs": 10,
+#     "fine_tune_epochs": 10,
+#     "coefs.crs_ent": 1,
+#     "coefs.clst": 0.8,
+#     "coefs.sep": 0.08,
+#     "coefs.l1": 0.001,
+#     "prototypes_per_class": 10,
+#     "prototype_shape": [128, 1, 1],
+#     "features": "resnet50",
+#     "augmentation_pipeline": [["geometric", "medium"], ["photometric", "medium"]],
+# }
 
 protopnet_nico_params = {
     "model": "protopnet",

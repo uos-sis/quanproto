@@ -57,9 +57,11 @@ def evaluate_complexity(
 
         # region Check if the inputs are a list or not
         # INFO: This should be the same in all evaluation functions
-        if isinstance(_inputs, (list, tuple)) and len(_inputs) == 2:
+        if isinstance(_inputs, (list, tuple)) and len(_inputs) == 4:
             inputs = _inputs[0].cuda()
             explanation_inputs = _inputs[1].cuda()
+            mask_bbox = _inputs[2]
+            mask_size = _inputs[3]
         else:
             inputs = _inputs.cuda()
             explanation_inputs = None
@@ -93,9 +95,20 @@ def evaluate_complexity(
             # segmentation masks to the saliency technique.
             if explanation_inputs is not None:
                 saliency_maps = model.saliency_maps(
-                    inputs, explanation_inputs, topk_indices
+                    inputs, explanation_inputs, mask_bbox, mask_size, topk_indices
                 )
-                saliency_masks = saliency_maps.clone().detach()
+                if model.explanation_type == "mask":
+                    saliency_masks = saliency_maps.clone().detach()
+                if model.explanation_type == "prp":
+                    saliency_masks = torch.stack(
+                        [
+                            torch.stack(
+                                [helpers.percentile_mask(saliency_maps[b, i]) for i in range(k)]
+                            )
+                            for b in range(saliency_maps.shape[0])
+                        ]
+                    )
+                    saliency_maps = saliency_maps * saliency_masks
             else:
                 # INFO: This is the default way to compute the saliency maps, which is used for
                 # ProtoPNet, ProtoPool, PIPNet, ProtoTree
@@ -103,10 +116,7 @@ def evaluate_complexity(
                 saliency_masks = torch.stack(
                     [
                         torch.stack(
-                            [
-                                helpers.percentile_mask(saliency_maps[b, i])
-                                for i in range(k)
-                            ]
+                            [helpers.percentile_mask(saliency_maps[b, i]) for i in range(k)]
                         )
                         for b in range(saliency_maps.shape[0])
                     ]
@@ -126,10 +136,7 @@ def evaluate_complexity(
             # hope that this normalization clipping is enough to remove these parts, but did not
             # test it.
             seg_masks = torch.stack(
-                [
-                    helpers.min_max_norm_mask(seg_masks[b])
-                    for b in range(seg_masks.shape[0])
-                ]
+                [helpers.min_max_norm_mask(seg_masks[b]) for b in range(seg_masks.shape[0])]
             )
 
             if "object overlap" in metrics:
@@ -184,6 +191,10 @@ def evaluate_complexity(
                 for b in range(prototype_partloc_ids.shape[0]):
                     for i in range(k):
                         non_zero = prototype_partloc_ids[b, i].nonzero()
+
+                        if non_zero.shape[0] == 0:
+                            continue
+
                         non_zero_indices = prototype_partloc_ids[b, i][non_zero]
 
                         # INFO: The consistency metric only works if partlocs_ids start at 1 so
@@ -207,9 +218,7 @@ def evaluate_complexity(
         results["Object Overlap"] = (total_mask_overlap / len(dataloader)) * 100
 
     if "background overlap" in metrics:
-        results["Background Overlap"] = (
-            total_background_overlap / len(dataloader)
-        ) * 100
+        results["Background Overlap"] = (total_background_overlap / len(dataloader)) * 100
 
     if "ior" in metrics:
         results["IOR"] = total_ior / len(dataloader)
@@ -236,9 +245,7 @@ def evaluate_complexity(
             if total_prototype_partlocs_ids[i].shape[0] == 0:
                 continue
 
-            _, counts = torch.unique(
-                total_prototype_partlocs_ids[i], return_counts=True
-            )
+            _, counts = torch.unique(total_prototype_partlocs_ids[i], return_counts=True)
 
             # compute the coverage of the partlocs by dividing the counts with the
             coverage_distribution = counts / prototype_histogram[str(float(i))]

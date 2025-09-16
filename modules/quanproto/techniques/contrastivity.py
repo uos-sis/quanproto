@@ -80,9 +80,11 @@ def evaluate_contrastivity(
 
         # region Check if the inputs are a list or not
         # INFO: This should be the same in all evaluation functions
-        if isinstance(batch[0], (list, tuple)) and len(batch[0]) == 2:
+        if isinstance(batch[0], (list, tuple)) and len(batch[0]) == 4:
             inputs = batch[0][0].cuda()
             explanation_inputs = batch[0][1].cuda()
+            mask_bbox = batch[0][2]
+            mask_size = batch[0][3]
         else:
             inputs = batch[0].cuda()
             explanation_inputs = None
@@ -131,27 +133,32 @@ def evaluate_contrastivity(
 
             # use only the top k similarity maps
             similarity_maps = torch.stack(
-                [
-                    similarity_maps[i, topk_indices[i]]
-                    for i in range(similarity_maps.shape[0])
-                ]
+                [similarity_maps[i, topk_indices[i]] for i in range(similarity_maps.shape[0])]
             )
 
             if "vlc" in metrics or "vac" in metrics:
                 if explanation_inputs is not None:
                     saliency_maps = model.saliency_maps(
-                        inputs, explanation_inputs, topk_indices
+                        inputs, explanation_inputs, mask_bbox, mask_size, topk_indices
                     )
-                    saliency_masks = saliency_maps.clone().detach()
+                    if model.explanation_type == "mask":
+                        saliency_masks = saliency_maps.clone().detach()
+                    if model.explanation_type == "prp":
+                        saliency_masks = torch.stack(
+                            [
+                                torch.stack(
+                                    [helpers.percentile_mask(saliency_maps[b, i]) for i in range(k)]
+                                )
+                                for b in range(saliency_maps.shape[0])
+                            ]
+                        )
+                        saliency_maps = saliency_maps * saliency_masks
                 else:
                     saliency_maps = model.saliency_maps(inputs, topk_indices)
                     saliency_masks = torch.stack(
                         [
                             torch.stack(
-                                [
-                                    helpers.percentile_mask(saliency_maps[b, i])
-                                    for i in range(k)
-                                ]
+                                [helpers.percentile_mask(saliency_maps[b, i]) for i in range(k)]
                             )
                             for b in range(saliency_maps.shape[0])
                         ]
@@ -166,9 +173,7 @@ def evaluate_contrastivity(
 
             if "vlc" in metrics:
                 if use_bbox:
-                    total_vlc += torch.mean(
-                        contrastivity.intra_bb_location_change(bbs)
-                    ).item()
+                    total_vlc += torch.mean(contrastivity.intra_bb_location_change(bbs)).item()
                 else:
                     total_vlc += torch.mean(
                         contrastivity.intra_mask_location_change(saliency_masks)
@@ -214,9 +219,7 @@ def evaluate_contrastivity(
                 ).item()
 
             if "inter fd" in metrics or "intra fd" in metrics:
-                feature_vectors = contrastivity.get_feature_vectors(
-                    similarity_maps, feature_map
-                )
+                feature_vectors = contrastivity.get_feature_vectors(similarity_maps, feature_map)
 
             if "inter fd" in metrics:
                 total_features = torch.cat([total_features, feature_vectors])
@@ -230,10 +233,7 @@ def evaluate_contrastivity(
                 similarity_masks = torch.stack(
                     [
                         torch.stack(
-                            [
-                                helpers.min_max_norm_mask(similarity_maps[b, i])
-                                for i in range(k)
-                            ]
+                            [helpers.min_max_norm_mask(similarity_maps[b, i]) for i in range(k)]
                         )
                         for b in range(similarity_maps.shape[0])
                     ]
@@ -275,17 +275,13 @@ def evaluate_contrastivity(
 
     if "inter pd" in metrics:
         total_inter_class_prototype_distance = torch.mean(
-            contrastivity.inter_class_vector_distance(
-                total_prototypes, total_one_hot_labels
-            )
+            contrastivity.inter_class_vector_distance(total_prototypes, total_one_hot_labels)
         ).item()
         results["Inter PD"] = total_inter_class_prototype_distance
 
     if "inter fd" in metrics:
         total_inter_class_feature_distance = torch.mean(
-            contrastivity.inter_class_vector_distance(
-                total_features, total_one_hot_labels
-            )
+            contrastivity.inter_class_vector_distance(total_features, total_one_hot_labels)
         ).item()
         results["Inter FD"] = total_inter_class_feature_distance
 
@@ -300,9 +296,7 @@ def evaluate_contrastivity(
         # make a histogram of the prototype indices
         unique, counts = torch.unique(total_prototype_indices, return_counts=True)
         prototype_histogram = dict(zip(unique.cpu().numpy(), counts.cpu().numpy()))
-        prototype_histogram = {
-            str(int(k)): int(v) for k, v in prototype_histogram.items()
-        }
+        prototype_histogram = {str(int(k)): int(v) for k, v in prototype_histogram.items()}
         results["histogram"] = prototype_histogram
 
     # INFO: we can also make a tsne plot of the prototype activations
@@ -310,8 +304,7 @@ def evaluate_contrastivity(
         projection = contrastivity.tsne_vector_projection(total_prototype_activation)
         prototype_projection = dict(zip(total_labels.cpu().numpy(), projection))
         prototype_projection = {
-            str(int(k)): [float(v[0]), float(v[1])]
-            for k, v in prototype_projection.items()
+            str(int(k)): [float(v[0]), float(v[1])] for k, v in prototype_projection.items()
         }
         results["projection"] = prototype_projection
 

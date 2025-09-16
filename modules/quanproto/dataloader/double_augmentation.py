@@ -50,8 +50,10 @@ class DoubleAugmentationDataset(Dataset):
             raise ValueError("Image has 2 channels")
 
         if hasattr(self, "bboxes"):
-            largest_bbox = F.combine_bounding_boxes(self.bboxes[idx])
-            geo_img = self.geotransform(image=img, cropping_bbox=largest_bbox)["image"]
+            # bbox = F.combine_bounding_boxes(self.bboxes[idx])
+            bbox = F.get_random_bounding_box(self.bboxes[idx])
+
+            geo_img = self.geotransform(image=img, cropping_bbox=bbox)["image"]
 
             img_t1 = self.transform(image=geo_img)["image"]
             img_t2 = self.transform(image=geo_img)["image"]

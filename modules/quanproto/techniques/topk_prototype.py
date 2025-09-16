@@ -26,9 +26,7 @@ def topk_prototype_images(model, dataloader, k=5):
                 similarity_maps, kernel_size=similarity_maps.shape[2:]
             ).squeeze()
 
-            total_similarity_scores = torch.cat(
-                (total_similarity_scores, similarity_scores), dim=0
-            )
+            total_similarity_scores = torch.cat((total_similarity_scores, similarity_scores), dim=0)
 
         del inputs, similarity_maps
 
@@ -41,7 +39,7 @@ def topk_prototype_images(model, dataloader, k=5):
     for i in range(topk_images.shape[1]):
         topk_ids = topk_images[:, i].cpu().tolist()
         proto_info_dict = {
-            "ids": topk_ids,
+            "ids": [dataloader.dataset.img_ids[idx] for idx in topk_ids],
             "paths": [dataloader.dataset.paths[idx] for idx in topk_ids],
             "labels": (
                 [dataloader.dataset.labels[idx][0] for idx in topk_ids]

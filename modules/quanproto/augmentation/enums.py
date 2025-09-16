@@ -5,6 +5,7 @@ This file contains the augmentation pipelines for the different types of augment
 import albumentations as A
 
 import quanproto.models.pipnet.best_augmentation as pipnet_augmentation
+import quanproto.models.protomask.best_augmentation as protomask_augmentation
 
 geometric_augmentation_ranges = {
     "small": {
@@ -157,6 +158,7 @@ augmentation_pipeline_dict = {
     "noise": get_noise_augmentation_pipeline,
     "continuity": get_continuity_augmentation_pipeline,
     "pipnet": pipnet_augmentation.get_pipnet_augmentation_pipeline,
+    "protomask": protomask_augmentation.get_protomask_augmentation_pipeline,
 }
 
 

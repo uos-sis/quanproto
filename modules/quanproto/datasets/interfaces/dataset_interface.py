@@ -81,6 +81,11 @@ class DatasetBase:
             raise ValueError("Sample directory is not set")
         return self._sample_dir
 
+    def segmentation_dir(self) -> str:
+        if self._segmentation_dir is None:
+            raise ValueError("Segmentation directory is not set")
+        return self._segmentation_dir
+
     def fold_info(self, k: int, dir_name) -> dict:
         if self._num_folds is None:
             raise ValueError("Folds have not been created")
@@ -341,13 +346,9 @@ class DatasetBase:
         # delete all class folders from the segmentation masks not in the class_names
         if len(self._segmentation_info) > 0:
             for seg_method in self._segmentation_info:
-                for folder in os.listdir(
-                    os.path.join(self._segmentation_dir, seg_method)
-                ):
+                for folder in os.listdir(os.path.join(self._segmentation_dir, seg_method)):
                     if folder not in self._class_names.values():
-                        shutil.rmtree(
-                            os.path.join(self._segmentation_dir, seg_method, folder)
-                        )
+                        shutil.rmtree(os.path.join(self._segmentation_dir, seg_method, folder))
 
     def make_mini_dataset(self, n_classes: int = 10):
         # delete everything except the samples of the first n_classes
@@ -392,9 +393,7 @@ class DatasetBase:
         self._num_samples = len(self._sample_names)
 
         with open(os.path.join(self._root_dir, "sample_labels.txt"), "r") as f:
-            self._sample_labels = {
-                int(line.split()[0]): int(line.split()[1]) for line in f
-            }
+            self._sample_labels = {int(line.split()[0]): int(line.split()[1]) for line in f}
 
         with open(os.path.join(self._root_dir, "class_names.txt"), "r") as f:
             self._class_names = {int(line.split()[0]): line.split()[1] for line in f}
@@ -423,8 +422,7 @@ class DatasetBase:
                 method: {
                     int(img_id): {
                         mask_prop_key: {
-                            int(mask_id): prop_val
-                            for mask_id, prop_val in mask_prop_dict.items()
+                            int(mask_id): prop_val for mask_id, prop_val in mask_prop_dict.items()
                         }
                         for mask_prop_key, mask_prop_dict in mask_info_dict.items()
                     }
@@ -435,9 +433,7 @@ class DatasetBase:
 
         # if segmentation masks are available, load the segmentation info
         if os.path.exists(os.path.join(self._root_dir, "segmentation_split_info.json")):
-            with open(
-                os.path.join(self._root_dir, "segmentation_split_info.json"), "r"
-            ) as f:
+            with open(os.path.join(self._root_dir, "segmentation_split_info.json"), "r") as f:
                 segmentation_split_info = json.load(f)
 
             # convert all index keys to int
@@ -445,8 +441,7 @@ class DatasetBase:
                 method: {
                     int(img_id): {
                         mask_prop_key: {
-                            int(mask_id): prop_val
-                            for mask_id, prop_val in mask_prop_dict.items()
+                            int(mask_id): prop_val for mask_id, prop_val in mask_prop_dict.items()
                         }
                         for mask_prop_key, mask_prop_dict in mask_info_dict.items()
                     }
@@ -499,12 +494,10 @@ class DatasetBase:
         for fold_index in range(self._num_folds):
             fold_sample_ids = self._fold_splits[fold_index]
             train_sample_names = {
-                sample_id: [self._sample_names[sample_id]]
-                for sample_id in fold_sample_ids[0]
+                sample_id: [self._sample_names[sample_id]] for sample_id in fold_sample_ids[0]
             }
             validation_sample_names = {
-                sample_id: [self._sample_names[sample_id]]
-                for sample_id in fold_sample_ids[1]
+                sample_id: [self._sample_names[sample_id]] for sample_id in fold_sample_ids[1]
             }
 
             if f"fold_{fold_index}" not in self._folder_sample_names:
@@ -538,12 +531,8 @@ class DatasetBase:
             fold_names.append("validation")
 
         for set_name in fold_names:
-            with open(
-                self._split_dir + f"/fold_{k}/balanced_" + set_name + ".txt", "w"
-            ) as f:
-                for sample_id, names in self._folder_sample_names[f"fold_{k}"][
-                    set_name
-                ].items():
+            with open(self._split_dir + f"/fold_{k}/balanced_" + set_name + ".txt", "w") as f:
+                for sample_id, names in self._folder_sample_names[f"fold_{k}"][set_name].items():
                     f.write(f"{sample_id} {' '.join(names)}\n")
 
     def balance_classes(self) -> None:
@@ -573,15 +562,13 @@ class DatasetBase:
 
                 fold_sample_names = {
                     sample_id: sample_names[0]
-                    for sample_id, sample_names in self._folder_sample_names[
-                        f"fold_{k}"
-                    ][set_name].items()
+                    for sample_id, sample_names in self._folder_sample_names[f"fold_{k}"][
+                        set_name
+                    ].items()
                 }
                 fold_class_ids = {
                     sample_id: self._sample_labels[sample_id]
-                    for sample_id in self._folder_sample_names[f"fold_{k}"][
-                        set_name
-                    ].keys()
+                    for sample_id in self._folder_sample_names[f"fold_{k}"][set_name].keys()
                 }
 
                 class_ids = np.array(list(fold_class_ids.values()))
@@ -633,11 +620,7 @@ class DatasetBase:
                                             os.path.join(
                                                 fold_dir + "_segmentations",
                                                 seg_method,
-                                                ".".join(
-                                                    new_sample_paths[i + 1].split(".")[
-                                                        :-1
-                                                    ]
-                                                ),
+                                                ".".join(new_sample_paths[i + 1].split(".")[:-1]),
                                             ),
                                         )
                                         for i in range(multiplier)
@@ -672,9 +655,7 @@ class DatasetBase:
                                         os.path.join(
                                             fold_dir + "_segmentations",
                                             seg_method,
-                                            ".".join(
-                                                new_sample_paths[-1].split(".")[:-1]
-                                            ),
+                                            ".".join(new_sample_paths[-1].split(".")[:-1]),
                                         ),
                                     )
                                 )
@@ -720,9 +701,7 @@ class DatasetBase:
         for file_name in os.listdir(target_dir):
             file_path = os.path.join(target_dir, file_name)
             if file_name.endswith(".tar.gz"):
-                subprocess.run(
-                    ["tar", "-xzf", file_name, "-C", target_dir], cwd=target_dir
-                )
+                subprocess.run(["tar", "-xzf", file_name, "-C", target_dir], cwd=target_dir)
                 # Check if the decompression was successful before removing the compressed file
                 if os.path.exists(file_path[:-7]):  # Remove the ".tar.gz" extension
                     os.remove(file_path)
@@ -754,32 +733,22 @@ class DatasetBase:
             seg_args = []
             for seg_method in self._segmentation_info:
                 for image_id in self._fold_splits[fold_index][0]:
-                    for mask_id in self._segmentation_info[seg_method][image_id][
-                        "masks"
-                    ]:
+                    for mask_id in self._segmentation_info[seg_method][image_id]["masks"]:
                         seg_args.append(
                             (
                                 os.path.join(
                                     self._segmentation_dir,
                                     seg_method,
-                                    ".".join(
-                                        self._sample_names[image_id].split(".")[:-1]
-                                    ),
-                                    self._segmentation_info[seg_method][image_id][
-                                        "masks"
-                                    ][mask_id],
+                                    ".".join(self._sample_names[image_id].split(".")[:-1]),
+                                    self._segmentation_info[seg_method][image_id]["masks"][mask_id],
                                 ),
                                 os.path.join(
                                     self._split_dir,
                                     f"fold_{fold_index}",
                                     "train_segmentations",
                                     seg_method,
-                                    ".".join(
-                                        self._sample_names[image_id].split(".")[:-1]
-                                    ),
-                                    self._segmentation_info[seg_method][image_id][
-                                        "masks"
-                                    ][mask_id],
+                                    ".".join(self._sample_names[image_id].split(".")[:-1]),
+                                    self._segmentation_info[seg_method][image_id]["masks"][mask_id],
                                 ),
                             )
                         )
@@ -807,32 +776,22 @@ class DatasetBase:
             seg_args = []
             for seg_method in self._segmentation_info:
                 for image_id in self._fold_splits[fold_index][1]:
-                    for mask_id in self._segmentation_info[seg_method][image_id][
-                        "masks"
-                    ]:
+                    for mask_id in self._segmentation_info[seg_method][image_id]["masks"]:
                         seg_args.append(
                             (
                                 os.path.join(
                                     self._segmentation_dir,
                                     seg_method,
-                                    ".".join(
-                                        self._sample_names[image_id].split(".")[:-1]
-                                    ),
-                                    self._segmentation_info[seg_method][image_id][
-                                        "masks"
-                                    ][mask_id],
+                                    ".".join(self._sample_names[image_id].split(".")[:-1]),
+                                    self._segmentation_info[seg_method][image_id]["masks"][mask_id],
                                 ),
                                 os.path.join(
                                     self._split_dir,
                                     f"fold_{fold_index}",
                                     "validation_segmentations",
                                     seg_method,
-                                    ".".join(
-                                        self._sample_names[image_id].split(".")[:-1]
-                                    ),
-                                    self._segmentation_info[seg_method][image_id][
-                                        "masks"
-                                    ][mask_id],
+                                    ".".join(self._sample_names[image_id].split(".")[:-1]),
+                                    self._segmentation_info[seg_method][image_id]["masks"][mask_id],
                                 ),
                             )
                         )
@@ -867,9 +826,7 @@ class DatasetBase:
                                 self._segmentation_dir,
                                 seg_method,
                                 ".".join(self._sample_names[image_id].split(".")[:-1]),
-                                self._segmentation_info[seg_method][image_id]["masks"][
-                                    mask_id
-                                ],
+                                self._segmentation_info[seg_method][image_id]["masks"][mask_id],
                             ),
                             os.path.join(
                                 self._split_dir,
@@ -877,9 +834,7 @@ class DatasetBase:
                                 "segmentations",
                                 seg_method,
                                 ".".join(self._sample_names[image_id].split(".")[:-1]),
-                                self._segmentation_info[seg_method][image_id]["masks"][
-                                    mask_id
-                                ],
+                                self._segmentation_info[seg_method][image_id]["masks"][mask_id],
                             ),
                         )
                     )
@@ -929,15 +884,11 @@ class DatasetBase:
 
             # create the fold/train and fold/validation folders
             for folder_name in fold_folders:
-                os.makedirs(
-                    os.path.join(self._split_dir, f"fold_{fold_index}", folder_name)
-                )
+                os.makedirs(os.path.join(self._split_dir, f"fold_{fold_index}", folder_name))
                 # create the fold/train/<class_name> and fold/validation/<class_name> folders
                 for _, c_name in self._class_names.items():
                     os.makedirs(
-                        os.path.join(
-                            self._split_dir, f"fold_{fold_index}", folder_name, c_name
-                        )
+                        os.path.join(self._split_dir, f"fold_{fold_index}", folder_name, c_name)
                     )
 
         if len(self._fold_splits[0][0]) != 0 and len(self._segmentation_info) != 0:
@@ -972,9 +923,7 @@ class DatasetBase:
 
     def _save_split_info(self) -> None:
         # save the train and validation split for each fold
-        for fold_index, (train_indices, validation_indices) in enumerate(
-            self._fold_splits
-        ):
+        for fold_index, (train_indices, validation_indices) in enumerate(self._fold_splits):
             with open(
                 os.path.join(
                     self._split_dir,
@@ -1002,8 +951,7 @@ class DatasetBase:
             [
                 name
                 for name in os.listdir(self._split_dir)
-                if os.path.isdir(os.path.join(self._split_dir, name))
-                and name.startswith("fold_")
+                if os.path.isdir(os.path.join(self._split_dir, name)) and name.startswith("fold_")
             ]
         )
         self._is_balanced = [False] * self._num_folds
@@ -1030,9 +978,7 @@ class DatasetBase:
 
             if len(train_indices) == 0:
                 raise ValueError(f"Train split is empty for fold {fold_index}")
-            self._fold_splits.append(
-                (np.array(train_indices), np.array(validation_indices))
-            )
+            self._fold_splits.append((np.array(train_indices), np.array(validation_indices)))
 
         # read the test set
         with open(os.path.join(self._split_dir, "test", "test.txt"), "r") as f:
@@ -1049,18 +995,12 @@ class DatasetBase:
                 if id in self._fold_splits[fold_index][0]
             }
             if f"fold_{fold_index}" not in self._folder_sample_names:
-                self._folder_sample_names.update(
-                    {f"fold_{fold_index}": {"train": sample_names}}
-                )
+                self._folder_sample_names.update({f"fold_{fold_index}": {"train": sample_names}})
             else:
-                self._folder_sample_names[f"fold_{fold_index}"].update(
-                    {"train": sample_names}
-                )
+                self._folder_sample_names[f"fold_{fold_index}"].update({"train": sample_names})
 
             # check if the train folder was balanced
-            if os.path.exists(
-                self._split_dir + f"/fold_{fold_index}/balanced_train.txt"
-            ):
+            if os.path.exists(self._split_dir + f"/fold_{fold_index}/balanced_train.txt"):
                 self._is_balanced[fold_index] = True
                 # read the balanced train sample names
                 with open(
@@ -1103,9 +1043,7 @@ class DatasetBase:
                     )
 
                 # check if the validation folder was balanced
-                if os.path.exists(
-                    self._split_dir + f"/fold_{fold_index}/balanced_validation.txt"
-                ):
+                if os.path.exists(self._split_dir + f"/fold_{fold_index}/balanced_validation.txt"):
                     self._is_balanced[fold_index] = True
                     # read the balanced validation sample names
                     with open(
@@ -1132,9 +1070,7 @@ class DatasetBase:
 
         # read the folder sample names for the test set
         sample_names = {
-            id: [name]
-            for id, name in self._sample_names.items()
-            if id in self._test_split
+            id: [name] for id, name in self._sample_names.items() if id in self._test_split
         }
         self._folder_sample_names["test"] = sample_names
         # endregion Load folder_sample_names -------------------------------------------------------
@@ -1251,9 +1187,7 @@ class DatasetBase:
 
         # TODO: also delete the segmentation mask from the split folders
 
-    def save_image_segmentation_masks(
-        self, method_name: str, image_id: int, masks_dict: dict
-    ):
+    def save_image_segmentation_masks(self, method_name: str, image_id: int, masks_dict: dict):
         """
         saves the masks to disk and updates the segmentation_info dictionary
 
@@ -1285,9 +1219,7 @@ class DatasetBase:
         # remove the file extension
         sample_path = ".".join(sample_path.split(".")[:-1])
 
-        segmentation_dir = os.path.join(
-            self._segmentation_dir, method_name, sample_path
-        )
+        segmentation_dir = os.path.join(self._segmentation_dir, method_name, sample_path)
 
         os.makedirs(segmentation_dir, exist_ok=True)
 
@@ -1299,7 +1231,7 @@ class DatasetBase:
             mask_name = f"mask_{i}.png"
             mask_path = os.path.join(segmentation_dir, mask_name)
             try:
-                ski.io.imsave(mask_path, mask)
+                ski.io.imsave(mask_path, mask, check_contrast=False)
             except:
                 print(f"Could not save mask {mask_path} to disk")
                 raise ValueError("Could not save mask to disk")
@@ -1338,9 +1270,7 @@ class DatasetBase:
             os.remove(os.path.join(self._root_dir, "segmentation_split_info.json"))
 
         # save self._segmentation_info to disk as json
-        with open(
-            os.path.join(self._root_dir, "segmentation_split_info.json"), "w"
-        ) as f:
+        with open(os.path.join(self._root_dir, "segmentation_split_info.json"), "w") as f:
             json.dump(self._segmentation_split_info, f)
 
     def reduce_masks(self, method, num: int):
@@ -1375,9 +1305,7 @@ class DatasetBase:
                     set_name
                 ].items():
 
-                    for mask_id, mask_name in current_state_dict[img_id][
-                        "masks"
-                    ].items():
+                    for mask_id, mask_name in current_state_dict[img_id]["masks"].items():
 
                         if mask_id >= num:
                             # go through all folders of an image (duplicated folders from balance_classes)
@@ -1398,9 +1326,7 @@ class DatasetBase:
         fold_dir = os.path.join(self._split_dir, "test", "segmentations", method)
         all_args = []
 
-        test_sample_paths = {
-            img_id: [self._sample_names[img_id]] for img_id in self._test_split
-        }
+        test_sample_paths = {img_id: [self._sample_names[img_id]] for img_id in self._test_split}
 
         for img_id, sample_paths in test_sample_paths.items():
             for mask_id, mask_name in current_state_dict[img_id]["masks"].items():
@@ -1482,9 +1408,7 @@ class DatasetBase:
                 ].items():
                     multiplier, remainder = multiplier_dict[img_id]
 
-                    for mask_id, mask_name in current_state_dict[img_id][
-                        "masks"
-                    ].items():
+                    for mask_id, mask_name in current_state_dict[img_id]["masks"].items():
                         if multiplier > 0:
                             # go through all folders of an image (duplicated folders from balance_classes)
                             for sample_path in sample_paths:
@@ -1503,9 +1427,7 @@ class DatasetBase:
                                     [
                                         (
                                             os.path.join(mask_folder_name, mask_name),
-                                            os.path.join(
-                                                mask_folder_name, new_mask_names[i + 1]
-                                            ),
+                                            os.path.join(mask_folder_name, new_mask_names[i + 1]),
                                         )
                                         for i in range(multiplier)
                                     ]
@@ -1513,9 +1435,9 @@ class DatasetBase:
 
                             # update segmentation info dict
                             for i in range(multiplier):
-                                tmp_dict[img_id]["masks"][
-                                    num_masks[img_id] * (i + 1) + mask_id
-                                ] = new_mask_names[i + 1]
+                                tmp_dict[img_id]["masks"][num_masks[img_id] * (i + 1) + mask_id] = (
+                                    new_mask_names[i + 1]
+                                )
                                 for prop_key in current_state_dict[img_id]:
                                     if prop_key != "masks":
                                         tmp_dict[img_id][prop_key][
@@ -1593,9 +1515,7 @@ class DatasetBase:
                                 [
                                     (
                                         os.path.join(mask_folder_name, mask_name),
-                                        os.path.join(
-                                            mask_folder_name, new_mask_names[i + 1]
-                                        ),
+                                        os.path.join(mask_folder_name, new_mask_names[i + 1]),
                                     )
                                     for i in range(multiplier)
                                 ]
@@ -1603,9 +1523,9 @@ class DatasetBase:
 
                         # update segmentation info dict
                         for i in range(multiplier):
-                            tmp_dict[img_id]["masks"][
-                                num_masks[img_id] * (i + 1) + mask_id
-                            ] = new_mask_names[i + 1]
+                            tmp_dict[img_id]["masks"][num_masks[img_id] * (i + 1) + mask_id] = (
+                                new_mask_names[i + 1]
+                            )
                             for prop_key in current_state_dict[img_id]:
                                 if prop_key != "masks":
                                     tmp_dict[img_id][prop_key][

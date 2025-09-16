@@ -48,6 +48,16 @@ def convert_to_multilabelmargin_input(target):
     return gpu_index_label
 
 
+def compute_mean_weight(model):
+    """Compute the mean weight of the model."""
+    total_params = 0
+    total_weight = 0
+    for param in model.parameters():
+        total_params += param.numel()
+        total_weight += torch.sum(param).item()
+    return total_weight / total_params
+
+
 def get_min_dist_vectors(
     dist_batch: torch.Tensor, feature_map: torch.Tensor, batch_min_idx
 ):

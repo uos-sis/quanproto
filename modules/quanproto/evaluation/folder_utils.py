@@ -46,9 +46,7 @@ def get_run_info(experiment_config: dict[str, str]) -> dict[str, dict[str, str]]
             # check if a run has a <folder_name>_config.json file if not remove it from the list
             rm_list = []
             for run in runs:
-                if not os.path.exists(
-                    os.path.join(root, "logs", run, f"{run}_config.json")
-                ):
+                if not os.path.exists(os.path.join(root, "logs", run, f"{run}_config.json")):
                     rm_list.append(run)
 
             # remove all runs that do not have a config file
@@ -77,54 +75,47 @@ def get_run_info(experiment_config: dict[str, str]) -> dict[str, dict[str, str]]
             for run in rm_list:
                 runs.remove(run)
 
+            # check if a run has a push_log_epoch_<epoch>.json file if not remove it from the list
+            def find_push_log_file(run):
+                for file_name in os.listdir(os.path.join(root, "models", run)):
+                    if file_name.startswith("push_log_epoch_") and file_name.endswith(".json"):
+                        return os.path.join(root, "models", run, file_name)
+                return None
+
             # add the runs to the run_info dictionary
             for run in runs:
                 run_info[run] = {
                     "config": os.path.join(root, "logs", run, f"{run}_config.json"),
                     "warmup": (
-                        os.path.join(
-                            root, "models", run, f"best_warmup_model_state_dict.pth"
-                        )
+                        os.path.join(root, "models", run, f"best_warmup_model_state_dict.pth")
                         if os.path.exists(
-                            os.path.join(
-                                root, "models", run, f"best_warmup_model_state_dict.pth"
-                            )
+                            os.path.join(root, "models", run, f"best_warmup_model_state_dict.pth")
                         )
                         else None
                     ),
                     "warmup_log": (
                         os.path.join(root, "models", run, f"best_warmup_model_log.json")
                         if os.path.exists(
-                            os.path.join(
-                                root, "models", run, f"best_warmup_model_log.json"
-                            )
+                            os.path.join(root, "models", run, f"best_warmup_model_log.json")
                         )
                         else None
                     ),
                     "joint": (
-                        os.path.join(
-                            root, "models", run, f"best_joint_model_state_dict.pth"
-                        )
+                        os.path.join(root, "models", run, f"best_joint_model_state_dict.pth")
                         if os.path.exists(
-                            os.path.join(
-                                root, "models", run, f"best_joint_model_state_dict.pth"
-                            )
+                            os.path.join(root, "models", run, f"best_joint_model_state_dict.pth")
                         )
                         else None
                     ),
                     "joint_log": (
                         os.path.join(root, "models", run, f"best_joint_model_log.json")
                         if os.path.exists(
-                            os.path.join(
-                                root, "models", run, f"best_joint_model_log.json"
-                            )
+                            os.path.join(root, "models", run, f"best_joint_model_log.json")
                         )
                         else None
                     ),
                     "fine_tune": (
-                        os.path.join(
-                            root, "models", run, f"best_fine_tune_model_state_dict.pth"
-                        )
+                        os.path.join(root, "models", run, f"best_fine_tune_model_state_dict.pth")
                         if os.path.exists(
                             os.path.join(
                                 root,
@@ -136,16 +127,13 @@ def get_run_info(experiment_config: dict[str, str]) -> dict[str, dict[str, str]]
                         else None
                     ),
                     "fine_tune_log": (
-                        os.path.join(
-                            root, "models", run, f"best_fine_tune_model_log.json"
-                        )
+                        os.path.join(root, "models", run, f"best_fine_tune_model_log.json")
                         if os.path.exists(
-                            os.path.join(
-                                root, "models", run, f"best_fine_tune_model_log.json"
-                            )
+                            os.path.join(root, "models", run, f"best_fine_tune_model_log.json")
                         )
                         else None
                     ),
+                    "push_log": find_push_log_file(run),
                 }
 
     # error handling
@@ -185,9 +173,7 @@ def get_technique_results(experiment_config):
 
     # error handling
     if len(technique_info) == 0:
-        raise FileNotFoundError(
-            "Could not find any results in the experiment directory"
-        )
+        raise FileNotFoundError("Could not find any results in the experiment directory")
     return technique_info
 
 
@@ -294,32 +280,25 @@ def get_aggregate_results(experiment_config):
                     dict_reference = dict_reference[folder]
 
                 if technique_file.endswith(".md"):
-                    dict_reference["md"] = os.path.join(
-                        root, "aggregate_results", technique_file
-                    )
+                    dict_reference["md"] = os.path.join(root, "aggregate_results", technique_file)
                 elif technique_file.endswith(".tex"):
-                    dict_reference["tex"] = os.path.join(
-                        root, "aggregate_results", technique_file
-                    )
+                    dict_reference["tex"] = os.path.join(root, "aggregate_results", technique_file)
 
     # error handling
     if len(aggregate_results) == 0:
-        raise FileNotFoundError(
-            "Could not find any results in the experiment directory"
-        )
+        raise FileNotFoundError("Could not find any results in the experiment directory")
     return aggregate_results
 
 
-def make_results_table(experiment_config):
-
+def make_results_table(experiment_config, prefix=""):
     technique_info = get_technique_results(experiment_config)
 
     for technique, run_info in technique_info.items():
         stats_df = run_statistics(run_info)
-        save_statistics(stats_df, experiment_config, technique)
+        save_statistics(stats_df, experiment_config, technique, prefix)
 
 
-def save_statistics(stats_df, experiment_config, technique):
+def save_statistics(stats_df, experiment_config, technique, prefix=""):
 
     out_dir = experiment_config["out_dir"]
     os.makedirs(out_dir, exist_ok=True)
@@ -336,15 +315,26 @@ def save_statistics(stats_df, experiment_config, technique):
 
     latex_table = stats_df.to_latex()
 
-    if os.path.exists(os.path.join(out_dir, f"{technique}_results.md")):
-        os.remove(os.path.join(out_dir, f"{technique}_results.md"))
-    if os.path.exists(os.path.join(out_dir, f"{technique}_results.tex")):
-        os.remove(os.path.join(out_dir, f"{technique}_results.tex"))
+    if prefix != "":
+        if os.path.exists(os.path.join(out_dir, f"{prefix}_{technique}_results.md")):
+            os.remove(os.path.join(out_dir, f"{prefix}_{technique}_results.md"))
+        if os.path.exists(os.path.join(out_dir, f"{prefix}_{technique}_results.tex")):
+            os.remove(os.path.join(out_dir, f"{prefix}_{technique}_results.tex"))
 
-    with open(os.path.join(out_dir, f"{technique}_results.md"), "w") as f:
-        f.write(markdown_table)
-    with open(os.path.join(out_dir, f"{technique}_results.tex"), "w") as f:
-        f.write(latex_table)
+        with open(os.path.join(out_dir, f"{prefix}_{technique}_results.md"), "w") as f:
+            f.write(markdown_table)
+        with open(os.path.join(out_dir, f"{prefix}_{technique}_results.tex"), "w") as f:
+            f.write(latex_table)
+    else:
+        if os.path.exists(os.path.join(out_dir, f"{technique}_results.md")):
+            os.remove(os.path.join(out_dir, f"{technique}_results.md"))
+        if os.path.exists(os.path.join(out_dir, f"{technique}_results.tex")):
+            os.remove(os.path.join(out_dir, f"{technique}_results.tex"))
+
+        with open(os.path.join(out_dir, f"{technique}_results.md"), "w") as f:
+            f.write(markdown_table)
+        with open(os.path.join(out_dir, f"{technique}_results.tex"), "w") as f:
+            f.write(latex_table)
 
 
 def experiments_evaluation(
@@ -353,6 +343,7 @@ def experiments_evaluation(
     training_phase: str = "fine_tune",
     explanation_type="upscale",
     dataloader_fn_dict=config_parser.get_dataloader_fn_dict(),
+    run_config_condition=None,
 ):
     """This function goes through all runs in the experiment directory and evaluates the
     model with the given technique. The results are saved in the run directory under the
@@ -395,7 +386,11 @@ def experiments_evaluation(
                 dataloader_fn,
                 explanation_type,
                 training_phase,
+                run_config_condition,
             )
+
+            if history is None:
+                continue
 
             result_dir = os.path.dirname(run_dict["config"]).replace("logs", "results")
             os.makedirs(result_dir, exist_ok=True)
@@ -415,6 +410,7 @@ def run_evaluation(
     dataloader_fn: Callable,
     explanation_type="upscale",
     training_phase: str = "fine_tune",
+    run_config_condition=None,
 ) -> None:
 
     # load the config file
@@ -427,7 +423,14 @@ def run_evaluation(
     if "fold_idx" not in run_config:
         raise KeyError("Could not find fold_idx in the config file")
 
+    if run_config_condition is not None:
+        run_value = run_config[run_config_condition["key"]]
+        if run_value not in run_config_condition["value"]:
+            return None
+
     run_config["dataset_dir"] = run_info["dataset_dir"]
+    print(f"Using dataset_dir: {run_config['dataset_dir']}")
+    print(f"run_config: {run_config}")
     dataloader = dataloader_fn["fn"](run_config, **dataloader_fn["args"])
 
     model = load_model(

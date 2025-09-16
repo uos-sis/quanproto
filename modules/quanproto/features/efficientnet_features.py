@@ -1,7 +1,7 @@
-from transformers import AutoModel
 import timm
 import torch
 from torchsummary import summary
+from transformers import AutoModel
 
 model_urls = {
     "efficientnet-b0": "google/efficientnet-b0",
@@ -24,7 +24,9 @@ def compare_weights(model1, model2):
 
 def efficientnet_b0_features(pretrained=False, with_pooling=False):
     if pretrained:
-        return AutoModel.from_pretrained(model_urls["efficientnet-b0"])
+        return AutoModel.from_pretrained(
+            model_urls["efficientnet-b0"], cache_dir="./model_cache"
+        )
 
         model = timm.create_model("efficientnet_b0", pretrained=True)
         # remove (classifier) and (global_pool) layers
@@ -32,7 +34,9 @@ def efficientnet_b0_features(pretrained=False, with_pooling=False):
             model.global_pool = torch.nn.Identity()
         model.classifier = torch.nn.Identity()
     else:
-        return AutoModel.from_pretrained(model_urls["efficientnet-b0"])
+        return AutoModel.from_pretrained(
+            model_urls["efficientnet-b0"], cache_dir="./model_cache"
+        )
 
         model = timm.create_model("efficientnet_b0", pretrained=False)
         # remove (classifier) and (global_pool) layers

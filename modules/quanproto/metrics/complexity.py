@@ -1,4 +1,6 @@
 import torch
+from quanproto.utils.vis_helper import save_mask
+import sys
 
 
 def mask_intersection_over_union(map_batch: torch.Tensor, mask_batch: torch.Tensor):
@@ -78,9 +80,7 @@ def background_overlap(map_batch: torch.Tensor, mask_batch: torch.Tensor):
     return background_overlap
 
 
-def outside_inside_relevance_ratio(
-    activation_map_batch: torch.Tensor, mask_batch: torch.Tensor
-):
+def outside_inside_relevance_ratio(activation_map_batch: torch.Tensor, mask_batch: torch.Tensor):
     """
     Compute the ratio of the relevance outside the mask to the relevance inside the mask
 
@@ -115,9 +115,7 @@ def outside_inside_relevance_ratio(
     return ratio
 
 
-def inside_outside_relevance(
-    activation_map_batch: torch.Tensor, mask_batch: torch.Tensor
-):
+def inside_outside_relevance(activation_map_batch: torch.Tensor, mask_batch: torch.Tensor):
     """
     Compute the mean difference of the relevance inside the mask to the relevance outside the mask
     This metric is more stable than the ratio metrics and is well defined between -1 and 1
@@ -136,6 +134,7 @@ def inside_outside_relevance(
     activation_map_batch: The batch of activation maps (B x N x H x W)
     mask_batch: The batch of segmentation masks (B x H x W)
     """
+
     # normalize the mask, get the max values of the two last dimensions
     max_values = torch.max(activation_map_batch, dim=3)[0]
     max_values = torch.max(max_values, dim=2)[0]  # B x N
@@ -162,6 +161,8 @@ def inside_outside_relevance(
     mean_inside_activation[num_inside == 0] = 0
 
     difference = mean_inside_activation - mean_outside_activation
+
+    # print(difference[0])
 
     return difference
 
@@ -209,9 +210,7 @@ def boundingbox_consistency(
     return partlocs_ids
 
 
-def map_consistency(
-    map_batch: torch.Tensor, partlocs: torch.Tensor, partlocs_ids: torch.Tensor
-):
+def map_consistency(map_batch: torch.Tensor, partlocs: torch.Tensor, partlocs_ids: torch.Tensor):
     """Compute how many part locations are in the map
 
     :param map_batch: The batch of activation maps (B x N x H x W)
@@ -225,9 +224,7 @@ def map_consistency(
     width_indices = partlocs[..., 0].long()
 
     # B x K
-    batch_indices = (
-        torch.arange(map_batch.shape[0]).unsqueeze(1).expand(-1, partlocs.shape[1])
-    )
+    batch_indices = torch.arange(map_batch.shape[0]).unsqueeze(1).expand(-1, partlocs.shape[1])
     # B x K x N
     in_map = map_batch[batch_indices, :, height_indices, width_indices].int()
     in_map = in_map.permute(0, 2, 1)  # B x N x K
@@ -236,3 +233,45 @@ def map_consistency(
     partlocs_ids = partlocs_ids.unsqueeze(1).expand(-1, map_batch.shape[1], -1) * in_map
 
     return partlocs_ids
+
+
+def mask_consistency(map_batch: torch.Tensor, partlocs: torch.Tensor, partlocs_ids: torch.Tensor):
+    """Compute how many part locations are in the map
+
+    :param map_batch: The batch of activation maps (B x N x H x W)
+    :type map_batch: torch.Tensor
+    :param partlocs: The part locations (B x K x 2)
+    :type partlocs: torch.Tensor
+    :param partlocs_ids: The part locations ids (B x K)
+    :type partlocs_ids: torch.Tensor
+    """
+    B = map_batch.shape[0]
+    K = partlocs.shape[1]
+    N = map_batch.shape[1]
+
+    height_indices = partlocs[..., 1].long()
+    width_indices = partlocs[..., 0].long()
+
+    # B x K
+    batch_indices = (
+        torch.arange(map_batch.shape[0], device=map_batch.device)
+        .unsqueeze(1)
+        .expand(-1, partlocs.shape[1])
+    )
+    # B x K x N
+    in_map = map_batch[batch_indices, :, height_indices, width_indices].int()
+    in_map = in_map.permute(0, 2, 1)  # B x N x K
+
+    # use the K dimension as a bit pattern and make a number out of it
+    # compute the correct datatype
+
+    in_map_ids = torch.zeros((B, N), dtype=torch.int64, device=map_batch.device)
+
+    powers_of_two = torch.pow(2, torch.arange(K, device=map_batch.device))
+    in_map_ids = in_map * powers_of_two
+    in_map_ids = in_map_ids.sum(dim=2).squeeze(0)
+
+    # make a unique tensor of the ids
+    in_map_ids_unique = torch.unique(in_map_ids)
+
+    return in_map_ids_unique

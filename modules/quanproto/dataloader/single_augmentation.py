@@ -64,8 +64,7 @@ class SingleAugmentationDataset(Dataset):
         """
         Get the item by id
         """
-        # idx = self.img_ids.index(img_id)
-        idx = img_id
+        idx = self.img_ids.index(img_id)
         if idx is None:
             raise ValueError(f"Image id {img_id} not found in dataset")
         return self.__getitem__(idx)

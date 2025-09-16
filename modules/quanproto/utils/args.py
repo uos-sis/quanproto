@@ -1,6 +1,8 @@
 import argparse
+import random
 from copy import deepcopy
 
+import numpy as np
 import torch
 
 from quanproto.utils.workspace import DATASET_DIR
@@ -12,7 +14,7 @@ parser = argparse.ArgumentParser(description="Description of your program.")
 parser.add_argument(
     "--features",
     type=str,
-    default="efficientnet-b0",
+    default="resnet50",
     help="Name of the backbone feature extractor",
 )
 parser.add_argument(
@@ -84,8 +86,18 @@ parser.add_argument(
 
 def make_experiment_config(args):
     torch.manual_seed(args.seed)
+
+    # Set the random seed for reproducibility
+    torch.manual_seed(args.seed)
+    np.random.seed(args.seed)
+    # random.seed(args.seed) # if used all experiment names will be the same
+
+    # If you're using CUDA, you can also set the seed for GPUs
+    torch.cuda.manual_seed_all(args.seed)
+
     torch.backends.cudnn.deterministic = True
     torch.backends.cudnn.benchmark = False
+
     torch.set_float32_matmul_precision("high")
 
     config = deepcopy(vars(args))

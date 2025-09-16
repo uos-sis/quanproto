@@ -1,7 +1,11 @@
 import os
-import numpy as np
-from PIL import Image
+
+# import quanproto.utils.vis_helper as vs
+import albumentations as A
 import deeplake
+import numpy as np
+import skimage as ski
+from PIL import Image
 
 from quanproto.datasets.interfaces import DatasetBase
 
@@ -146,3 +150,60 @@ class Cars196(DatasetBase):
         if len(self._bounding_boxes) == 0:
             raise ValueError("Bounding boxes have not been loaded.")
         return self._bounding_boxes
+
+    def reduce_max_size(self, max_size: tuple = (1920, 1080)) -> None:
+        transform = A.Compose(
+            [
+                A.Resize(height=max_size[1], width=max_size[0]),
+            ],
+            bbox_params=A.BboxParams(format="coco", label_fields=["class_labels"]),
+        )
+        # get a list of all samples
+
+        # compute max width and height
+        max_width, max_height = max_size
+
+        # iterate over all samples
+        for id, sample in self._sample_names.items():
+            # open the image
+            img = ski.io.imread(os.path.join(self._sample_dir, sample))
+            bbox = self._bounding_boxes[id]
+            label = self._sample_labels[id]
+
+            # get the size
+            height = img.shape[0]
+            width = img.shape[1]
+
+            # check if the size is larger than the max size
+            if height > max_height or width > max_width:
+                trans_dic = transform(image=img, bboxes=[bbox], class_labels=[label])
+                new_img = trans_dic["image"]
+                new_bbox = trans_dic["bboxes"]
+
+                # round all values in new_bbox to .0
+                new_bbox = [
+                    [
+                        float(round(bbox[0])),
+                        float(round(bbox[1])),
+                        float(round(bbox[2])),
+                        float(round(bbox[3])),
+                    ]
+                    for bbox in new_bbox
+                ]
+
+                # save the new image
+                new_image = Image.fromarray(new_img, mode="RGB")
+                new_image.save(os.path.join(self._sample_dir, sample))
+                # update the bounding box
+                self._bounding_boxes[id] = (
+                    new_bbox[0][0],
+                    new_bbox[0][1],
+                    new_bbox[0][2],
+                    new_bbox[0][3],
+                )
+
+        # save the new bounding boxes
+        with open(os.path.join(self._root_dir, "bounding_boxes.txt"), "w") as f:
+            for image_id in self._bounding_boxes:
+                bb_str = " ".join([str(bb) for bb in self._bounding_boxes[image_id]])
+                f.write(f"{image_id} {bb_str}\n")

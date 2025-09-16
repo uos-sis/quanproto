@@ -66,9 +66,6 @@ def stability_score_bb(bb_batch1: list, bb_batch2: list, partlocs: torch.Tensor)
     assert bb_batch1.device == partlocs.device
     assert bb_batch2.device == partlocs.device
 
-    # Ensure partlocs is on the same device as bb_batch1
-    # partlocs = partlocs.to(bb_batch1.device)
-
     # expand the bounding boxes to K so we have B x N x K x 4
     bb_batch1 = bb_batch1.unsqueeze(2).expand(-1, -1, partlocs.shape[1], -1)
     bb_batch2 = bb_batch2.unsqueeze(2).expand(-1, -1, partlocs.shape[1], -1)
@@ -102,8 +99,6 @@ def stability_score_bb(bb_batch1: list, bb_batch2: list, partlocs: torch.Tensor)
 
     num_changed = torch.sum((in_union.int() - in_intersection.int()), dim=2)
     stability = 1 - num_changed.float() / num_partlocs.float()
-    # compute the partslocs that are in the union but not in the intersection
-    # stability = 1 - torch.mean((in_union.int() - in_intersection.int()).float(), dim=2)
 
     return stability
 
@@ -122,9 +117,7 @@ def stability_score_mask(map_batch1, map_batch2, partlocs):
     width_indices = partlocs[..., 0].long()
 
     # B x K
-    batch_indices = (
-        torch.arange(map_batch1.shape[0]).unsqueeze(1).expand(-1, partlocs.shape[1])
-    )
+    batch_indices = torch.arange(map_batch1.shape[0]).unsqueeze(1).expand(-1, partlocs.shape[1])
     # B x K x N
     in_map1 = map_batch1[batch_indices, :, height_indices, width_indices].int()
     in_map1 = in_map1.permute(0, 2, 1)  # B x N x K
@@ -139,6 +132,5 @@ def stability_score_mask(map_batch1, map_batch2, partlocs):
     num_changed = torch.sum((in_union.int() - in_intersection.int()), dim=2)
 
     stability = 1 - num_changed.float() / num_partlocs.float()
-    # stability = 1 - torch.mean((in_union.int() - in_intersection.int()).float(), dim=2)
 
     return stability
